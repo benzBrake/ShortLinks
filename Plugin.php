@@ -7,7 +7,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.0.1
+ * @version 1.0.2
  * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
  */
  class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -101,9 +101,14 @@
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
 				$options = Typecho_Widget::widget('Widget_Options');
-				$sUrl = str_ireplace('/', '\/', rtrim($options->siteUrl, '/'));
-				$preg = '#(<a .*?href=")(?!' . $sUrl . ')([^"]+)"(.*?<\/a>)#ise';
-				$text = preg_replace($preg, "stripslashes('$1') . '$options->siteUrl' . 't/' . base64_encode('$2') . '\" target=\"_blank\"' . stripslashes('$3')", $text);
+				preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
+				if($matches){
+					foreach($matches[2] as $val){
+						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)){
+							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."go/".base64_encode($val)."\" ",$text);
+						}
+					}
+				}
 			}
 			if ($widget instanceof Widget_Abstract_Comments) {
 				$widget->url = $options->siteUrl .  "t/" .base64_encode($widget->url );
