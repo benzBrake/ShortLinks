@@ -117,9 +117,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			//301重定向
 			$this->response->redirect($target,301);
 		}else{			
-?>
-<h1>你麻痹你麻痹你麻痹你麻痹你麻痹你麻痹你麻痹你麻痹你麻痹你麻痹<?php echo $target ?></h1>
-<?php
+			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
 		}		
 	}
 
