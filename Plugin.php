@@ -105,7 +105,7 @@
 				if($matches){
 					foreach($matches[2] as $val){
 						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)){
-							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."t/".base64_encode($val)."\" ",$text);
+							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."t/".str_replace("/","slash",base64_encode($val))."\" ",$text);
 						}
 					}
 				}
