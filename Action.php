@@ -97,7 +97,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			//设置nofollow属性
 			$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
 			//301重定向
-			$this->response->redirect($target,301);
+			$this->response->redirect(htmlspecialchars_decode($target),301);
 
 		}else{			
 			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
@@ -111,12 +111,12 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	{
 		$key = $this->request->key;
 		$target = base64_decode(str_replace("slash","/",$key));
-		if( $target){		 
+		if($target){
 			//设置nofollow属性
 			$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
 			//301重定向
 			$this->response->redirect($target,301);
-		}else{			
+		}else{
 			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
 		}		
 	}
