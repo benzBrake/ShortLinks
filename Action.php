@@ -79,7 +79,9 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		$key = $this->request->key;
 		$siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl;
 		$requestString = str_replace("|","/",$key);
-		if (strpos($this->request->getReferer(),$siteUrl) === false) {
+		$referer = $this->request->getReferer();
+		$refererList = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->refererList;
+		if (strpos($referer,$siteUrl) === false || ($refererList != "" &&!preg_match($refererList,$referer))) {
 			// 来路不明禁止跳转
 			$this->response->redirect($siteUrl,301);
 		} else {

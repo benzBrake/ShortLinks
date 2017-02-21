@@ -1,7 +1,6 @@
 <?php
 /**
- * 把外部链接转换为 your_blog_path/t/key/  <br>
- * 或者 your_blog_path/go/key/ <br>
+ * 把外部链接转换为 your_blog_path/go/key/  <br>
  * 通过菜单“创建->短链接”设置 <br>
  * 自定义短链功能来自<a href="http://defe.me/prg/429.html">golinks</a> | 感谢：<a href="http://forum.typecho.org/viewtopic.php?t=5576">小咪兔</a>
  *
@@ -74,8 +73,12 @@
 	 */
 	public static function config(Typecho_Widget_Helper_Form $form)
 	{
-		$convert =  new Typecho_Widget_Helper_Form_Element_Radio('convert' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('外链转内链'),_t('会帮你把外链转换成内链'));
-		$form->addInput($convert );
+		$convert =  new Typecho_Widget_Helper_Form_Element_Radio('convert' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('外链转内链'),_t('开启后会帮你把外链转换成内链'));
+		$form->addInput($convert);
+		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单(正则表达式)'));
+		$form->addInput($refererList);
+		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t('/(b0\.upaiyun\.com|glb\.clouddn\.com|qbox\.me|qnssl\.com)/'), _t('外链转换白名单'), _t('在这里设置外链转换白名单(正则表达式)'));
+		$form->addInput($nonConvertList);
 	}
 
 	/**
@@ -95,14 +98,15 @@
 	 * @return $content
 	 */
 	public static function replace($text, $widget, $lastResult) {
-		if(Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->convert == 1)  {
+		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks');
+		if($pOption->convert == 1)  {
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
 				$options = Typecho_Widget::widget('Widget_Options');
 				preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
 				if($matches){
 					foreach($matches[2] as $val){
-						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)){
+						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && !preg_match($pOption->nonConvertList,$val)){
 							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\" ",$text);
 						}
 					}
