@@ -7,7 +7,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.0.2
+ * @version 1.0.3
  * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
  */
  class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -42,7 +42,6 @@
 		}
 
 		Helper::addAction('shortlinks', 'ShortLinks_Action');
-		Helper::addRoute('t', '/t/[key]/', 'ShortLinks_Action', 'baselink');
 		Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
 		Helper::addPanel(2, 'ShortLinks/panel.php', '短链接', '短链接管理',   'administrator');
 		Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('ShortLinks_Plugin','replace');
@@ -61,7 +60,6 @@
 	public static function deactivate()
 	{
 		Helper::removeRoute('go');
-		Helper::removeRoute('t');
 		Helper::removeAction('shortlinks');
 		Helper::removePanel(2, 'ShortLinks/panel.php');
 		return('短链接插件已被禁用，但是数据表并没有被删除');
@@ -105,13 +103,13 @@
 				if($matches){
 					foreach($matches[2] as $val){
 						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)){
-							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."t/".str_replace("/","slash",base64_encode(htmlspecialchars_decode($val)))."\" ",$text);
+							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\" ",$text);
 						}
 					}
 				}
 			}
 			if ($widget instanceof Widget_Abstract_Comments) {
-				$widget->url = $options->siteUrl .  "t/" .base64_encode($widget->url );
+				$widget->url = $options->siteUrl .  "go/" .base64_encode($widget->url);
 			}
 		}
 		return $text;
