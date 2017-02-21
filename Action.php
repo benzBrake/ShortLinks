@@ -31,7 +31,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			$this->widget('Widget_Notice')->set(_t('请输入目标链接。'), NULL, 'error');
 		}
 		//判断key是否被占用
-		elseif($this->getTarget($key)){			;
+		elseif($this->getTarget($key)){
 			$this->widget('Widget_Notice')->set(_t('该key已被使用，请更换key值。'), NULL, 'error');
 		}  else {
 			 $links=array(
@@ -51,14 +51,15 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	public function edit(){
 		$target = $this->request->url;
 		$id = $this->request->id;
-		if(trim($target) == "" || $target == "http://"){	 
+		if(trim($target) == "" || $target == "http://"){
 			Typecho_Response::throwJson('error');
 		}else{
 			if($id){
-			$this->db->query($this->db->update('table.shortlinks')->rows(array('target' => $target))
-					->where('id = ?', $id));		   
-			Typecho_Response::throwJson('success');
-		}}
+				$this->db->query($this->db->update('table.shortlinks')->rows(array('target' => $target))
+					->where('id = ?', $id));
+				Typecho_Response::throwJson('success');
+			}
+		}
 	}
 
 	/**
@@ -110,15 +111,20 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	public function baselink()
 	{
 		$key = $this->request->key;
-		$target = base64_decode(str_replace("slash","/",$key));
-		if($target){
-			//设置nofollow属性
-			$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
-			//301重定向
-			$this->response->redirect($target,301);
-		}else{
-			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
-		}		
+		$siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl;
+		if (strpos($this->request->getReferer(),$siteUrl) === false) {
+			$this->response->redirect($siteUrl,301);
+		} else {
+			$target = base64_decode(str_replace("slash","/",$key));
+			if($target){
+				//设置nofollow属性
+				$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
+				//301重定向
+				$this->response->redirect($target,301);
+			}else{
+				throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
+			}
+		}
 	}
 
 	/**
@@ -158,3 +164,4 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	}
 }
 ?>
+
