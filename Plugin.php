@@ -107,7 +107,7 @@
 				if($matches){
 					foreach($matches[2] as $val){
 						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && !preg_match($pOption->nonConvertList,$val)){
-							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\" ",$text);
+							$text=str_replace("href=\"$val\"", "target=\"_blank\"href=\"".$options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\" ",$text);
 						}
 					}
 				}
