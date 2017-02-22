@@ -12,11 +12,11 @@ Typecho外链转内链插件，支持正文和评论者链接
 
 自定义短链功能来自[golinks](http://defe.me/prg/429.html "golinks")；
 
-目前不允许非博客URL的referer。
+支持 referer 白名单和外链转换白名单。
 
 ### Todo
 
-增加referer白名单，增加外链转换白名单。
+降低白名单的学习成本
 
 ### 感谢
 [小咪兔](http://forum.typecho.org/viewtopic.php?t=5576 "小咪兔")
