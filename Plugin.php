@@ -6,7 +6,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.0.3
+ * @version 1.0.4
  * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
  */
  class ShortLinks_Plugin implements Typecho_Plugin_Interface
