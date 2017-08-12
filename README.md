@@ -6,7 +6,7 @@ Typecho外链转内链插件，支持正文和评论者链接
 ### 简介
 ~~把外部链接转换为 your_blog_path/t/key/ 或者 your_blog_path/go/key/；
 
-已经合并为 your_blog_path/t/key/；
+已经合并为 your_blog_path/go/key/；
 
 通过菜单“创建->短链接”设置；
 
