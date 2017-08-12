@@ -3,6 +3,7 @@
 
 Typecho外链转内链插件，支持正文和评论者链接
 
+最稳定版下载地址:https://github.com/benzBrake/ShortLinks/releases/latest
 ### 简介
 ~~把外部链接转换为 your_blog_path/t/key/ 或者 your_blog_path/go/key/；
 
@@ -13,7 +14,7 @@ Typecho外链转内链插件，支持正文和评论者链接
 自定义短链功能来自[golinks](http://defe.me/prg/429.html "golinks")；
 
 支持 referer 白名单和外链转换白名单。
-
+### 使用方法 Uasge
 ### Todo
 
 降低白名单的学习成本
