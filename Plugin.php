@@ -39,13 +39,12 @@
 				  PRIMARY KEY (`id`)
 				) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
 		}
-
 		Helper::addAction('shortlinks', 'ShortLinks_Action');
 		Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
 		Helper::addPanel(2, 'ShortLinks/panel.php', '短链接', '短链接管理',   'administrator');
 		Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('ShortLinks_Plugin','replace');
 		Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('ShortLinks_Plugin','replace');
-		Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = array('ShortLinks_Plugin','replace');
+		Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin','replace');
 		return('数据表 '.$shortlinks.' 创建成功, 插件已经成功激活!');
 	}
 	/**
@@ -63,7 +62,6 @@
 		Helper::removePanel(2, 'ShortLinks/panel.php');
 		return('短链接插件已被禁用，但是数据表并没有被删除');
 	}
-
 	/**
 	 * 获取插件配置面板
 	 *
@@ -80,7 +78,6 @@
 		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t('/(b0\.upaiyun\.com|glb\.clouddn\.com|qbox\.me|qnssl\.com)/'), _t('外链转换白名单'), _t('在这里设置外链转换白名单(正则表达式)'));
 		$form->addInput($nonConvertList);
 	}
-
 	/**
 	 * 个人用户的配置面板
 	 *
@@ -113,7 +110,7 @@
 				}
 			}
 			if ($widget instanceof Widget_Abstract_Comments) {
-				$widget->url = $options->siteUrl .  "go/" .base64_encode($widget->url);
+				$text['url'] = $options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($text['url'])));
 			}
 		}
 		return $text;

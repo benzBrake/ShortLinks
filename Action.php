@@ -87,26 +87,23 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		} else {
 			if ($requestString === base64_encode(base64_decode($requestString))) {
 				$requestString = base64_decode($requestString);
+				$this->response->redirect(htmlspecialchars_decode($requestString),301);
 			}
-			if (!filter_var($requestString, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED)) {
-				$target = $this->getTarget($key);
-				if( $target){
-					//增加统计
-					$count = $this->db->fetchObject($this->db->select('count')
-						->from('table.shortlinks')
-						->where('key = ?', $key))->count;
-					$count = $count+1;
-					$this->db->query($this->db->update('table.shortlinks')
-						->rows(array('count' => $count))
-						->where('key = ?', $key));
-					//设置nofollow属性
-					$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
-					//301重定向
-				} else {
-					throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
-				}
+			$target = $this->getTarget($key);
+			if( $target){
+				//增加统计
+				$count = $this->db->fetchObject($this->db->select('count')
+					->from('table.shortlinks')
+					->where('key = ?', $key))->count;
+				$count = $count+1;
+				$this->db->query($this->db->update('table.shortlinks')
+					->rows(array('count' => $count))
+					->where('key = ?', $key));
+				//设置nofollow属性
+				$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
+				//301重定向
 			} else {
-				$target = $requestString;
+					throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
 			}
 			$this->response->redirect(htmlspecialchars_decode($target),301);
 		}
