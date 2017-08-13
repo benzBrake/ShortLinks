@@ -76,17 +76,8 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		$requestString = str_replace("|","/",$key);
 		$referer = $this->request->getReferer();
 		$refererList = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->refererList;
-		if ($requestString === base64_encode(base64_decode($requestString))) {
-			$requestString = base64_decode($requestString);
-			if (strpos($referer,$siteUrl) === false || ($refererList != "" &&!preg_match($refererList,$referer))) {
-				// 来路不明禁止跳转
-				$this->response->redirect($siteUrl,301);
-			} else {
-				$this->response->redirect(htmlspecialchars_decode($requestString),301);
-			}
-		}
 		$target = $this->getTarget($key);
-		if( $target){
+		if($target){
 			//增加统计
 			$count = $this->db->fetchObject($this->db->select('count')
 				->from('table.shortlinks')
@@ -98,8 +89,17 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			//设置nofollow属性
 			$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
 			//301重定向
+		} else if ($requestString === base64_encode(base64_decode($requestString))){
+			$requestString = base64_decode($requestString);
+			if (strpos($referer,$siteUrl) === false || ($refererList != "" &&!preg_match($refererList,$referer))) {
+				// 来路不明禁止跳转
+				$this->response->redirect($siteUrl,301);
+				exit();
+			} else {
+				$target = $requestString;
+			}
 		} else {
-				throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
+			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
 		}
 		$this->response->redirect(htmlspecialchars_decode($target),301);
 	}
