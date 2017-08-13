@@ -110,7 +110,10 @@
 				}
 			}
 			if ($widget instanceof Widget_Abstract_Comments) {
-				$text['url'] = $options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($text['url']))).'" target="_blank';
+				$url = $text['url'];
+				if(strpos($url,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false) {
+					$text['url'] = $options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($url))).'" target="_blank';
+				}
 			}
 		}
 		return $text;
