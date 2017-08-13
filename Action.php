@@ -6,17 +6,14 @@
  * @license	GNU General Public License 2.0
  * 
  */
-
 class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 {
 	private $db;   
-
 	public function __construct($request, $response, $params = NULL)
 	{
 		parent::__construct($request, $response, $params);
 		$this->db = Typecho_Db::get();
 	}
-
 	/**
 	 * 添加新的链接转换
 	 * 
@@ -59,7 +56,6 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			}
 		}
 	}
-
 	/**
 	 *删除链接转换
 	 *
@@ -70,7 +66,6 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 					->where('id = ?', $id));
 		
 	}
-
 	/**
 	 * 链接重定向
 	 * 
@@ -81,32 +76,32 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		$requestString = str_replace("|","/",$key);
 		$referer = $this->request->getReferer();
 		$refererList = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->refererList;
-		if (strpos($referer,$siteUrl) === false || ($refererList != "" &&!preg_match($refererList,$referer))) {
-			// 来路不明禁止跳转
-			$this->response->redirect($siteUrl,301);
-		} else {
-			if ($requestString === base64_encode(base64_decode($requestString))) {
-				$requestString = base64_decode($requestString);
+		if ($requestString === base64_encode(base64_decode($requestString))) {
+			$requestString = base64_decode($requestString);
+			if (strpos($referer,$siteUrl) === false || ($refererList != "" &&!preg_match($refererList,$referer))) {
+				// 来路不明禁止跳转
+				$this->response->redirect($siteUrl,301);
+			} else {
 				$this->response->redirect(htmlspecialchars_decode($requestString),301);
 			}
-			$target = $this->getTarget($key);
-			if( $target){
-				//增加统计
-				$count = $this->db->fetchObject($this->db->select('count')
-					->from('table.shortlinks')
-					->where('key = ?', $key))->count;
-				$count = $count+1;
-				$this->db->query($this->db->update('table.shortlinks')
-					->rows(array('count' => $count))
-					->where('key = ?', $key));
-				//设置nofollow属性
-				$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
-				//301重定向
-			} else {
-					throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
-			}
-			$this->response->redirect(htmlspecialchars_decode($target),301);
 		}
+		$target = $this->getTarget($key);
+		if( $target){
+			//增加统计
+			$count = $this->db->fetchObject($this->db->select('count')
+				->from('table.shortlinks')
+				->where('key = ?', $key))->count;
+			$count = $count+1;
+			$this->db->query($this->db->update('table.shortlinks')
+				->rows(array('count' => $count))
+				->where('key = ?', $key));
+			//设置nofollow属性
+			$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
+			//301重定向
+		} else {
+				throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
+		}
+		$this->response->redirect(htmlspecialchars_decode($target),301);
 	}
 	/**
 	 * 获取目标链接
@@ -134,7 +129,6 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		Helper::addRoute('go', $link, 'ShortLinks_Action', 'golink');
 		Typecho_Response::throwJson('success');
 	}
-
 	public function action(){
 		$this->widget('Widget_User')->pass('administrator');
 		$this->on($this->request->is('add'))->add();
