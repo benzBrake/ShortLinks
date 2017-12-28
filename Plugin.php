@@ -4,9 +4,10 @@
  * 通过菜单“创建->短链接”设置 <br>
  * 自定义短链功能来自<a href="http://defe.me/prg/429.html">golinks</a> | 感谢：<a href="http://forum.typecho.org/viewtopic.php?t=5576">小咪兔</a>
  *
+ * 1.0.6 a1 修复bug
  * @package ShortLinks
  * @author Ryan
- * @version 1.0.5
+ * @version 1.0.6 a1
  * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
  */
  class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -100,7 +101,7 @@
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
 				$options = Typecho_Widget::widget('Widget_Options');
-				preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
+				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
 				if($matches){
 					foreach($matches[2] as $val){
 						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && !preg_match($pOption->nonConvertList,$val)){
@@ -111,7 +112,7 @@
 			}
 			if ($widget instanceof Widget_Abstract_Comments) {
 				$url = $text['url'];
-				if(strpos($url,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false) {
+				if(strpos($url,'://')!==false && strpos($url, rtrim($options->siteUrl, '/'))===false) {
 					$text['url'] = $options->siteUrl."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($url))).'" target="_blank';
 				}
 			}
