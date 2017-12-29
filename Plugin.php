@@ -71,15 +71,15 @@
 	 */
 	public static function config(Typecho_Widget_Helper_Form $form)
 	{
-		$convert =  new Typecho_Widget_Helper_Form_Element_Radio('convert' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('外链转内链'),_t('开启后会帮你把外链转换成内链'));
-		$form->addInput($convert);
-		$convert_comment_link =  new Typecho_Widget_Helper_Form_Element_Radio('convert_comment_link' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
-		$form->addInput($convert_comment_link);
-		$target = new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('新窗口打开链接'),_t('评论者链接不适用'));
-		$form->addInput($target);
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('convert' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('外链转内链'),_t('开启后会帮你把外链转换成内链'));
+		$form->addInput($radio);
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('comment_link' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
+		$form->addInput($radio);
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
+		$form->addInput($radio);
 		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单(正则表达式)'));
 		$form->addInput($refererList);
-		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t('/(b0\.upaiyun\.com|glb\.clouddn\.com|qbox\.me|qnssl\.com)/'), _t('外链转换白名单'), _t('在这里设置外链转换白名单(正则表达式)'));
+		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单'));
 		$form->addInput($nonConvertList);
 	}
 	/**
@@ -101,26 +101,27 @@
 	public static function replace($text, $widget, $lastResult) {
 		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; 
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks');
-		$target = ($pOption === 1) ? ' target="_blank"' : '';
-		if($pOption->convert === 1)  {
+		$target  = ($pOption->target) ? ' target="_blank" ' : '';
+		$nonConvertList = '/' . str_replace(array('.', '/'), array('\.', '\/'), str_replace(array("\r\n", "\r", "\n"), "|", $pOption->nonConvertList)) . '/';
+		if($pOption->convert == 1)  {
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
 				$options = Typecho_Widget::widget('Widget_Options');
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
 				if($matches){
 					foreach($matches[2] as $val){
-						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && !preg_match($pOption->nonConvertList,$val)){
-							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"". $target, $text);
+						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && !preg_match($nonConvertList, $val)){
+							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target,$text);
 						}
 					}
 				}
 			}
-		}
-		if($pOption->convert_comment_link === 1)  {
-			if ($widget instanceof Widget_Abstract_Comments) {
-				$url = $text['url'];
-				if(strpos($url,'://')!==false && strpos($url, rtrim($options->siteUrl, '/'))===false) {
-					$text['url'] = $options->siteUrl . $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($url)));
+			if ($pOption->comment_link == 1) {
+				if ($widget instanceof Widget_Abstract_Comments) {
+					$url = $text['url'];
+					if(strpos($url,'://')!==false && strpos($url, rtrim($options->siteUrl, '/'))===false) {
+						$text['url'] = $options->siteUrl . $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($url)));
+					}
 				}
 			}
 		}
