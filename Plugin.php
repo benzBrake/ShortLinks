@@ -75,7 +75,7 @@
 		$form->addInput($radio);
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('convert_comment_link' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
 		$form->addInput($radio);
-		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('新窗口打开文章中的链接'),_t('开启后会帮你文章中的链接新增target属性'));
 		$form->addInput($radio);
 		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
 		$form->addInput($refererList);
@@ -99,10 +99,10 @@
 	 * @return $content
 	 */
 	public static function replace($text, $widget, $lastResult) {
-		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; 
-		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks');
-		$target  = ($pOption->target) ? ' target="_blank" ' : '';
-		$nonConvertList = "/(" . str_replace(array('.', '/'), array('\.', '\/'), str_replace(array("\r\n", "\r", "\n"), ")|(", $pOption->nonConvertList)) . ")/"; // 白名单转换为正则表达式
+		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; // 伪静态处理
+		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+		$target  = ($pOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
+		$nonConvertList = self::textareaToArr($pOption->nonConvertList); // 不转换列表
 		if($pOption->convert == 1)  {
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
@@ -110,9 +110,10 @@
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
 				if($matches){
 					foreach($matches[2] as $val){
-						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && ($nonConvertList == "/()/" || !preg_match($nonConvertList, $val))){
-							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target,$text);
-						}
+						if (strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/')) !== false) continue; // 本站链接
+						if (self::checkDomain($val, $nonConvertList)) continue; // 不转换列表中的不处理
+						if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)) continue; // 图片不处理
+						$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target, $text);
 					}
 				}
 			}
@@ -126,5 +127,36 @@
 			}
 		}
 		return $text;
+	}
+	/**
+	 * 检查域名是否在数组中存在
+	 *
+	 * @access public
+	 * @param $url $arr
+	 * @param $class
+	 * @return boolean
+	 */
+	public static function checkDomain($url, $arr) {
+		if ($arr === null) return false;
+		if (count($arr) === 0) return false;
+		foreach($arr as $a) {
+			if (strpos($url, $a) !== false) {
+				return true;
+			}
+		}
+		return false;
+	}
+	/**
+	 * 一行一个文本框转数组
+	 *
+	 * @access public
+	 * @param $textarea
+	 * @param $class
+	 * @return $arr
+	 */
+	public static function textareaToArr($textarea) {
+		$str = str_replace(array("\r\n", "\r", "\n"), "|", $textarea);
+		if ($str ="") return null;
+		$arr = explode("|", $str);
 	}
  }
