@@ -6,7 +6,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.0.6 a1
+ * @version 1.0.7
  * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
  */
  class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -73,11 +73,11 @@
 	{
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('convert' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('外链转内链'),_t('开启后会帮你把外链转换成内链'));
 		$form->addInput($radio);
-		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('comment_link' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('convert_comment_link' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
 		$form->addInput($radio);
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
 		$form->addInput($radio);
-		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单(正则表达式)'));
+		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
 		$form->addInput($refererList);
 		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单'));
 		$form->addInput($nonConvertList);
@@ -102,7 +102,7 @@
 		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; 
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks');
 		$target  = ($pOption->target) ? ' target="_blank" ' : '';
-		$nonConvertList = '/' . str_replace(array('.', '/'), array('\.', '\/'), str_replace(array("\r\n", "\r", "\n"), "|", $pOption->nonConvertList)) . '/';
+		$nonConvertList = "/(" . str_replace(array('.', '/'), array('\.', '\/'), str_replace(array("\r\n", "\r", "\n"), ")|(", $pOption->nonConvertList)) . ")/"; // 白名单转换为正则表达式
 		if($pOption->convert == 1)  {
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
@@ -110,13 +110,13 @@
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
 				if($matches){
 					foreach($matches[2] as $val){
-						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && !preg_match($nonConvertList, $val)){
+						if(strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/'))===false && !preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val) && ($nonConvertList == "/()/" || !preg_match($nonConvertList, $val))){
 							$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target,$text);
 						}
 					}
 				}
 			}
-			if ($pOption->comment_link == 1) {
+			if ($pOption->convert_comment_link == 1) {
 				if ($widget instanceof Widget_Abstract_Comments) {
 					$url = $text['url'];
 					if(strpos($url,'://')!==false && strpos($url, rtrim($options->siteUrl, '/'))===false) {

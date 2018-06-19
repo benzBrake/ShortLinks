@@ -74,8 +74,9 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		$key = $this->request->key;
 		$siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl;
 		$requestString = str_replace("|","/",$key);
-		$referer = $this->request->getReferer();
-		$refererList = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->refererList;
+		$referer = $this->request->getReferer(); 
+		$refererList = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->refererList; // 允许的referer列表
+		$refererList = explode("|", str_replace(array("\r\n", "\r", "\n"), "|", $refererList));
 		$target = $this->getTarget($key);
 		if($target){
 			//增加统计
@@ -90,8 +91,16 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
 			//301重定向
 		} else if ($requestString === base64_encode(base64_decode($requestString))){
+			// 自动转换链接处理
 			$requestString = base64_decode($requestString);
-			if (strpos($referer,$siteUrl) === false || ($refererList != "" &&!preg_match($refererList,$referer))) {
+			$check_flag = false; // 默认不允许跳转
+			foreach($refererList as $site) {
+				if(strpos($referer, $site) !== false) {
+					$check_flag = true;
+					break;
+				}
+			}
+			if (strpos($referer,$siteUrl) === false || !check_flag) {
 				// 来路不明禁止跳转
 				$this->response->redirect($siteUrl,301);
 				exit();
