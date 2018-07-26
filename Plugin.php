@@ -101,27 +101,27 @@
 	public static function replace($text, $widget, $lastResult) {
 		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; // 伪静态处理
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+		$siteUrl = Helper::options()->siteUrl;
 		$target  = ($pOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
 		$nonConvertList = self::textareaToArr($pOption->nonConvertList); // 不转换列表
 		if($pOption->convert == 1)  {
 			$text = empty($lastResult) ? $text : $lastResult;
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
-				$options = Typecho_Widget::widget('Widget_Options');
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
 				if($matches){
 					foreach($matches[2] as $val){
-						if (strpos($val,'://')!==false && strpos($val,rtrim($options->siteUrl, '/')) !== false) continue; // 本站链接
+						if (strpos($val,'://')!==false && strpos($val,rtrim($siteUrl, '/')) !== false) continue; // 本站链接
 						if (self::checkDomain($val, $nonConvertList)) continue; // 不转换列表中的不处理
 						if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)) continue; // 图片不处理
-						$text=str_replace("href=\"$val\"", "href=\"".$options->siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target, $text);
+						$text=str_replace("href=\"$val\"", "href=\"".$siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target, $text);
 					}
 				}
 			}
 			if ($pOption->convert_comment_link == 1) {
 				if ($widget instanceof Widget_Abstract_Comments) {
 					$url = $text['url'];
-					if(strpos($url,'://')!==false && strpos($url, rtrim($options->siteUrl, '/'))===false) {
-						$text['url'] = $options->siteUrl . $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($url)));
+					if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
+						$text['url'] = $siteUrl . $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($url)));
 					}
 				}
 			}
@@ -156,7 +156,7 @@
 	 */
 	public static function textareaToArr($textarea) {
 		$str = str_replace(array("\r\n", "\r", "\n"), "|", $textarea);
-		if ($str ="") return null;
-		$arr = explode("|", $str);
+		if ($str == "") return null;
+		return explode("|", $str);
 	}
  }
