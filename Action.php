@@ -73,15 +73,16 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	public function shortlink(){
 		$key = $this->request->key;
 		$siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl;
-		$requestString = str_replace("|","/",$key);
+		$requestString = str_replace("|","/",$key); // 特殊字符处理
 		$referer = $this->request->getReferer(); 
-		$refererList = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->refererList; // 允许的referer列表
-		$refererList = ShortLinks_Plugin::textareaToArr($refererList);
+		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+		$refererList = ShortLinks_Plugin::textareaToArr($pOption->refererList); // 允许的referer列表
 		$target = $this->getTarget($key);
-		//设置nofollow属性
+		// 设置nofollow属性
 		$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
 		if($target){
-			//增加统计
+			// 自定义短链
+			// 增加统计
 			$count = $this->db->fetchObject($this->db->select('count')
 				->from('table.shortlinks')
 				->where('key = ?', $key))->count;
@@ -89,28 +90,31 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			$this->db->query($this->db->update('table.shortlinks')
 				->rows(array('count' => $count))
 				->where('key = ?', $key));
-			//301重定向
 		} else if ($requestString === base64_encode(base64_decode($requestString))){
 			// 自动转换链接处理
 			$target = base64_decode($requestString);
 			$allow_redirect = false; // 默认不允许跳转
+			// 检查 referer
+			$allow_redirect = ShortLinks_Plugin::checkDomain($referer, $refererList); 
 			if (strpos($referer,$siteUrl) !== false) {
 				$allow_redirect = true;
 			}
-			foreach($refererList as $site) {
-				if(strpos($referer, $site) !== false) {
-					$allow_redirect = true;
-					break;
-				}
-			}
 			if (!$allow_redirect) {
+				// referer 非法跳转到首页
 				$this->response->redirect($siteUrl,301);
 				exit();
 			}
 		} else {
 			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
 		}
-		$this->response->redirect(htmlspecialchars_decode($target),301);
+		if (Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->go_page == 0) {
+			// 无跳转页面
+			$this->response->redirect(htmlspecialchars_decode($target),301);
+		} else {
+			$html = str_replace(array('{{url}}', '{{delay}}'), array($target, $pOption->go_delay), file_get_contents(__DIR__ . '/go.html'));
+			_e($html);
+			exit();
+		}
 	}
 	/**
 	 * 获取目标链接

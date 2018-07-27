@@ -75,6 +75,10 @@
 		$form->addInput($radio);
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('convert_comment_link' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('转换评论者链接'),_t('开启后会帮你把评论者链接转换成内链'));
 		$form->addInput($radio);
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('go_page' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('跳转页面开关'),_t('开启后会展示跳转页面'));
+		$form->addInput($radio);
+		$edit =  new Typecho_Widget_Helper_Form_Element_Text('go_delay', NULL, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
+		$form->addInput($edit);
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('新窗口打开文章中的链接'),_t('开启后会帮你文章中的链接新增target属性'));
 		$form->addInput($radio);
 		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
