@@ -128,7 +128,7 @@
 					$url = $text['url'];
 					if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
 						$uri = str_replace('[key]', str_replace("/","|",base64_encode(htmlspecialchars_decode($url))), $linkBase);
-						$text['url'] = $siteUrl . $rewrite . $uri);
+						$text['url'] = $siteUrl . $rewrite . $uri;
 					}
 				}
 			}
