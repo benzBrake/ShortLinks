@@ -107,7 +107,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		} else {
 			throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
 		}
-		if (Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks')->go_page == 0) {
+		if ($pOption->go_page == 0) {
 			// 无跳转页面
 			$this->response->redirect(htmlspecialchars_decode($target),301);
 		} else {
