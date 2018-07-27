@@ -76,7 +76,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		$requestString = str_replace("|","/",$key); // 特殊字符处理
 		$referer = $this->request->getReferer(); 
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
-		$refererList = ShortLinks_Plugin::textareaToArr($pOption->refererList); // 允许的referer列表
+		$referer_list = ShortLinks_Plugin::textareaToArr($pOption->referer_list); // 允许的referer列表
 		$target = $this->getTarget($key);
 		// 设置nofollow属性
 		$this->response->setHeader('X-Robots-Tag','noindex, nofollow');
@@ -95,7 +95,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 			$target = base64_decode($requestString);
 			$allow_redirect = false; // 默认不允许跳转
 			// 检查 referer
-			$allow_redirect = ShortLinks_Plugin::checkDomain($referer, $refererList); 
+			$allow_redirect = ShortLinks_Plugin::checkDomain($referer, $referer_list); 
 			if (strpos($referer,$siteUrl) !== false) {
 				$allow_redirect = true;
 			}

@@ -81,8 +81,8 @@
 		$form->addInput($edit);
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('新窗口打开文章中的链接'),_t('开启后会帮你文章中的链接新增target属性'));
 		$form->addInput($radio);
-		$refererList =  new Typecho_Widget_Helper_Form_Element_Textarea('refererList', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
-		$form->addInput($refererList);
+		$referer_list =  new Typecho_Widget_Helper_Form_Element_Textarea('referer_list', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
+		$form->addInput($referer_list);
 		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单'));
 		$form->addInput($nonConvertList);
 	}
