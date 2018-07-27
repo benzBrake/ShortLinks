@@ -139,7 +139,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	public function resetLink(){
 		$link = $this->request->link;
 		Helper::removeRoute('go');
-		Helper::addRoute('go', $link, 'ShortLinks_Action', 'golink');
+		Helper::addRoute('go', $link, 'ShortLinks_Action', 'shortlink');
 		Typecho_Response::throwJson('success');
 	}
 	public function action(){

@@ -105,6 +105,7 @@
 	public static function replace($text, $widget, $lastResult) {
 		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; // 伪静态处理
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+		$linkBase = ltrim(rtrim(Typecho_Router::get('go')['url'] , '/'), '/'); // 防止链接形式修改后不能用
 		$siteUrl = Helper::options()->siteUrl;
 		$target  = ($pOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
 		$nonConvertList = self::textareaToArr($pOption->nonConvertList); // 不转换列表
@@ -117,7 +118,8 @@
 						if (strpos($val,'://')!==false && strpos($val,rtrim($siteUrl, '/')) !== false) continue; // 本站链接
 						if (self::checkDomain($val, $nonConvertList)) continue; // 不转换列表中的不处理
 						if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)) continue; // 图片不处理
-						$text=str_replace("href=\"$val\"", "href=\"".$siteUrl. $rewrite ."go/".str_replace("/","|",base64_encode(htmlspecialchars_decode($val)))."\"" . $target, $text);
+						$uri = str_replace('[key]', str_replace("/","|",base64_encode(htmlspecialchars_decode($val))), $linkBase);
+						$text= str_replace("href=\"$val\"", "href=\"". $siteUrl . $rewrite . $uri . "\"" . $target, $text);
 					}
 				}
 			}
