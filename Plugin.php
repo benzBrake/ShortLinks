@@ -6,7 +6,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.0.8
+ * @version 1.0.9
  * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
  */
  class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -44,7 +44,9 @@
 		Helper::addPanel(2, 'ShortLinks/panel.php', '短链接', '短链接管理',   'administrator');
 		Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('ShortLinks_Plugin','replace');
 		Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('ShortLinks_Plugin','replace');
+		Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin','replace');
 		Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin','replace');
+		Typecho_Plugin::factory('Widget_Archive')->singleHandle = array('ShortLinks_Plugin','replace');
 		return('数据表 '.$shortlinks.' 创建成功, 插件已经成功激活!');
 	}
 	/**
@@ -81,9 +83,11 @@
 		$form->addInput($edit);
 		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('target' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('新窗口打开文章中的链接'),_t('开启后会帮你文章中的链接新增target属性'));
 		$form->addInput($radio);
+		$textarea =  new Typecho_Widget_Helper_Form_Element_Textarea('convert_custom_field', NULL, NULL, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
+		$form->addInput($textarea);
 		$referer_list =  new Typecho_Widget_Helper_Form_Element_Textarea('referer_list', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
 		$form->addInput($referer_list);
-		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单'));
+		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
 		$form->addInput($nonConvertList);
 	}
 	/**
@@ -102,38 +106,66 @@
 	 * @param $class
 	 * @return $content
 	 */
-	public static function replace($text, $widget, $lastResult) {
-		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; // 伪静态处理
-		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
-		$linkBase = ltrim(rtrim(Typecho_Router::get('go')['url'] , '/'), '/'); // 防止链接形式修改后不能用
+	public static function replace($text, $widget) {
+		$pluginOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
 		$siteUrl = Helper::options()->siteUrl;
-		$target  = ($pOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
-		$nonConvertList = self::textareaToArr($pOption->nonConvertList); // 不转换列表
-		if($pOption->convert == 1)  {
-			$text = empty($lastResult) ? $text : $lastResult;
-			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
-				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text,$matches);
-				if($matches){
-					foreach($matches[2] as $val){
-						if (strpos($val,'://')!==false && strpos($val,rtrim($siteUrl, '/')) !== false) continue; // 本站链接
-						if (self::checkDomain($val, $nonConvertList)) continue; // 不转换列表中的不处理
-						if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$val)) continue; // 图片不处理
-						$uri = str_replace('[key]', str_replace("/","|",base64_encode(htmlspecialchars_decode($val))), $linkBase);
-						$text= str_replace("href=\"$val\"", "href=\"". $siteUrl . $rewrite . $uri . "\"" . $target, $text);
+		$target  = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
+		if($pluginOption->convert == 1)  {
+			if (!is_string($text) && $text instanceof Widget_Archive) {
+			// 自定义字段处理
+				$fieldsList = self::textareaToArr($pluginOption->convert_custom_field);
+				if ($fieldsList) {
+					foreach ($fieldsList as $field) {
+						if (isset($text->fields[$field])) {
+							@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/',$text->fields[$field], $matches);
+							if($matches){
+								foreach($matches[2] as $link){
+									$text->fields[$field] = str_replace("href=\"$link\"", "href=\"". self::convertLink($link) . "\"", $text->fields[$field]);
+								}
+							}
+						}
 					}
 				}
 			}
-			if ($pOption->convert_comment_link == 1) {
-				if ($widget instanceof Widget_Abstract_Comments) {
-					$url = $text['url'];
-					if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
-						$uri = str_replace('[key]', str_replace("/","|",base64_encode(htmlspecialchars_decode($url))), $linkBase);
-						$text['url'] = $siteUrl . $rewrite . $uri;
+			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
+			// 文章内容和评论内容处理
+				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
+				if($matches){
+					foreach($matches[2] as $link){
+						$text= str_replace("href=\"$link\"", "href=\"". self::convertLink($link) . "\"" . $target, $text);
 					}
+				}
+			}
+			if ($pluginOption->convert_comment_link == 1 && $widget instanceof Widget_Abstract_Comments) {
+			// 评论者链接处理
+				$url = $text['url'];
+				if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
+					$text['url'] = self::covertLink($url, false);
 				}
 			}
 		}
 		return $text;
+	}
+	/**
+	 * 转换链接形式
+	 *
+	 * @access public
+	 * @param $link
+	 * @return $string
+	 */
+	public static function convertLink($link, $check = true) {
+		$rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; // 伪静态处理
+		$pluginOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+		$linkBase = ltrim(rtrim(Typecho_Router::get('go')['url'] , '/'), '/'); // 防止链接形式修改后不能用
+		$siteUrl = Helper::options()->siteUrl;
+		$target  = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
+		$nonConvertList = self::textareaToArr($pluginOption->nonConvertList); // 不转换列表
+		if ($check) {
+			if (strpos($link, '://') !== false && strpos($link, rtrim($siteUrl, '/')) !== false) return $link; //本站链接不处理
+			if (self::checkDomain($link, $nonConvertList)) return $link; // 不转换列表中的不处理
+			if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i',$link)) return $link; // 图片不处理
+		}
+		return $siteUrl . $rewrite. str_replace('[key]', str_replace("/","|",base64_encode(htmlspecialchars_decode($link))), $linkBase);
 	}
 	/**
 	 * 检查域名是否在数组中存在
