@@ -126,7 +126,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 		$target = $this->db->fetchRow($this->db->select('target')
 				->from('table.shortlinks')
 				->where(' key = ?' , $key));
-		 if($target['target']){
+		 if(isset($target['target'])){
 			 return  $target['target'];
 		 }else{
 			 return FALSE;
