@@ -140,7 +140,7 @@
 			// 评论者链接处理
 				$url = $text['url'];
 				if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
-					$text['url'] = self::covertLink($url, false);
+					$text['url'] = self::convertLink($url, false);
 				}
 			}
 		}
