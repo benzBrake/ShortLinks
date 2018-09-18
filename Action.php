@@ -73,9 +73,12 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	public function shortlink(){
 		$key = $this->request->key;
 		$siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl;
-		$requestString = str_replace("|","/",$key); // 特殊字符处理
-		$referer = $this->request->getReferer(); 
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+		$requestString = str_replace("|","/",$key); // 特殊字符处理
+		$referer = $this->request->getReferer();
+		// 允许空 referer
+		if (empty($referer) && $pOption->null_referer === "1")
+			$referer = $siteUrl;
 		$referer_list = ShortLinks_Plugin::textareaToArr($pOption->referer_list); // 允许的referer列表
 		$target = $this->getTarget($key);
 		// 设置nofollow属性

@@ -85,6 +85,8 @@
 		$form->addInput($radio);
 		$textarea =  new Typecho_Widget_Helper_Form_Element_Textarea('convert_custom_field', NULL, NULL, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
 		$form->addInput($textarea);
+		$radio =  new Typecho_Widget_Helper_Form_Element_Radio('null_referer' , array('1'=>_t('开启'),'0'=>_t('关闭')),'1',_t('空Referer开关'),_t('开启后会允许空Referer'));
+		$form->addInput($radio);
 		$referer_list =  new Typecho_Widget_Helper_Form_Element_Textarea('referer_list', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
 		$form->addInput($referer_list);
 		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
