@@ -108,7 +108,8 @@
 	 * @param $class
 	 * @return $content
 	 */
-	public static function replace($text, $widget) {
+	public static function replace($text, $widget, $lastResult) {
+		$text = empty($lastResult) ? $text : $lastResult;
 		$pluginOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
 		$siteUrl = Helper::options()->siteUrl;
 		$target  = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
