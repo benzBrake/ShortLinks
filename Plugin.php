@@ -91,6 +91,8 @@
 		$form->addInput($referer_list);
 		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
 		$form->addInput($nonConvertList);
+		$nonConvertCids =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertCids', NULL, _t(""), _t('文章转换白名单'), _t('在这里填写文章CID，一行一个，存在于本列表的文章内容将不会进行链接转换'));
+		$form->addInput($nonConvertCids);
 	}
 	/**
 	 * 个人用户的配置面板
@@ -130,7 +132,7 @@
 					}
 				}
 			}
-			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
+			if ((($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) && !in_array($widget->cid,self::textareaToArr($pluginOption->nonConvertCids))) {
 			// 文章内容和评论内容处理
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
 				if($matches){
