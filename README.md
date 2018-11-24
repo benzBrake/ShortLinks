@@ -4,17 +4,13 @@
 Typecho外链转内链插件，支持正文和评论者链接
 最稳定版下载地址:https://github.com/benzBrake/ShortLinks/releases/latest
 ### 简介
-1.把外部链接转换为your_blog_path/go/key/，撰写链接页面支持修改
-
-2.通过菜单“创建->短链接”设置；
-
-3.自定义短链功能来自[golinks](http://defe.me/prg/429.html "golinks")；
-
-4.支持 referer 白名单和外链转换白名单。
-
-5.支持跳转页面
-
-6.支持自定义字段转换（实验性功能）
+1. 把外部链接转换为your_blog_path/go/key/，撰写链接页面支持修改
+2. 通过菜单“创建->短链接”设置；
+3. 自定义短链功能来自[golinks](http://defe.me/prg/429.html "golinks")；
+4. 支持 referer 白名单和外链转换白名单；
+5. 支持跳转页面；
+6. 支持自定义字段转换（实验性功能）；
+7. 支持关闭指定页面的链接转换功能。添加自定义字段`noshort`即可；
 
 ### 使用方法 Uasge
 ### Todo

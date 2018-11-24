@@ -91,8 +91,6 @@
 		$form->addInput($referer_list);
 		$nonConvertList =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL ."glb.clouddn.com" . PHP_EOL ."qbox.me" . PHP_EOL ."qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
 		$form->addInput($nonConvertList);
-		$nonConvertCids =  new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertCids', NULL, _t(""), _t('文章转换白名单'), _t('在这里填写文章CID，一行一个，存在于本列表的文章内容将不会进行链接转换'));
-		$form->addInput($nonConvertCids);
 	}
 	/**
 	 * 个人用户的配置面板
@@ -117,7 +115,7 @@
 		$target  = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
 		if($pluginOption->convert == 1)  {
 			if (!is_string($text) && $text instanceof Widget_Archive) {
-			// 自定义字段处理
+				// 自定义字段处理
 				$fieldsList = self::textareaToArr($pluginOption->convert_custom_field);
 				if ($fieldsList) {
 					foreach ($fieldsList as $field) {
@@ -132,8 +130,11 @@
 					}
 				}
 			}
-			if ((($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) && !in_array($widget->cid,self::textareaToArr($pluginOption->nonConvertCids))) {
-			// 文章内容和评论内容处理
+			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
+				$fields = unserialize($widget->fields);
+				if (is_array($fields)&&array_key_exists("noshort", $fields))
+					return $text;
+				// 文章内容和评论内容处理
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
 				if($matches){
 					foreach($matches[2] as $link){
@@ -142,7 +143,7 @@
 				}
 			}
 			if ($pluginOption->convert_comment_link == 1 && $widget instanceof Widget_Abstract_Comments) {
-			// 评论者链接处理
+				// 评论者链接处理
 				$url = $text['url'];
 				if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
 					$text['url'] = self::convertLink($url, false);
