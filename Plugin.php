@@ -115,7 +115,7 @@
 		$target  = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
 		if($pluginOption->convert == 1)  {
 			if (!is_string($text) && $text instanceof Widget_Archive) {
-			// 自定义字段处理
+				// 自定义字段处理
 				$fieldsList = self::textareaToArr($pluginOption->convert_custom_field);
 				if ($fieldsList) {
 					foreach ($fieldsList as $field) {
@@ -131,7 +131,10 @@
 				}
 			}
 			if (($widget instanceof Widget_Archive)||($widget instanceof Widget_Abstract_Comments)) {
-			// 文章内容和评论内容处理
+				$fields = unserialize($widget->fields);
+				if (is_array($fields)&&array_key_exists("noshort", $fields))
+					return $text;
+				// 文章内容和评论内容处理
 				@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
 				if($matches){
 					foreach($matches[2] as $link){
@@ -140,7 +143,7 @@
 				}
 			}
 			if ($pluginOption->convert_comment_link == 1 && $widget instanceof Widget_Abstract_Comments) {
-			// 评论者链接处理
+				// 评论者链接处理
 				$url = $text['url'];
 				if(strpos($url,'://')!==false && strpos($url, rtrim($siteUrl, '/'))===false) {
 					$text['url'] = self::convertLink($url, false);
