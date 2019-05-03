@@ -72,7 +72,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 	 */
 	public function shortlink(){
 		$key = $this->request->key;
-		$siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl;
+		$siteUrl = preg_replace("/https?:\/\//", "", Typecho_Widget::widget('Widget_Options')->siteUrl);
 		$pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
 		$requestString = str_replace("|","/",$key); // 特殊字符处理
 		$referer = $this->request->getReferer();
