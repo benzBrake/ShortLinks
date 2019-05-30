@@ -8,7 +8,7 @@ Typecho外链转内链插件，支持正文和评论者链接
 2. 通过菜单“创建->短链接”设置；
 3. 自定义短链功能来自[golinks](http://defe.me/prg/429.html "golinks")；
 4. 支持 referer 白名单和外链转换白名单；
-5. 支持跳转页面；
+5. 支持跳转页面，可以自行制作模板放到templates目录下，插件设置里可选择，目前自带5个模板；
 6. 支持自定义字段转换（实验性功能）；
 7. 支持关闭指定页面的链接转换功能。添加自定义字段`noshort`即可；
 
@@ -21,6 +21,8 @@ Typecho外链转内链插件，支持正文和评论者链接
 [小咪兔](http://forum.typecho.org/viewtopic.php?t=5576 "小咪兔")
 
 [DEFE](http://defe.me/prg/429.html "golinks")
+
+[左岸](https://www.zrahh.com/archives/451.html "左岸")
 
 ### 预览
 暂时没有
