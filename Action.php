@@ -62,7 +62,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
     }
 
     /**
-     *删除链接转换
+     * 删除链接转换
      *
      * @param int $id
      */

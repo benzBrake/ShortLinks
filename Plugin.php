@@ -1,14 +1,12 @@
 <?php
 
 /**
- * 把外部链接转换为 your_blog_path/go/key/  <br>
- * 通过菜单“创建->短链接”设置 <br>
- * 自定义短链功能来自<a href="http://defe.me/prg/429.html">golinks</a> | 感谢：<a href="http://forum.typecho.org/viewtopic.php?t=5576">小咪兔</a>
+ * 把外部链接转换为指定内部链接
  *
  * @package ShortLinks
  * @author Ryan
  * @version 1.1.0 a1
- * @link http://blog.iplayloli.com/typecho-plugin-shortlinks.html
+ * @link https://github.com/benzBrake/ShortLinks
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
 {
@@ -42,7 +40,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         }
         Helper::addAction('shortlinks', 'ShortLinks_Action');
         Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
-        Helper::addPanel(2, 'ShortLinks/panel.php', '短链接', '短链接管理', 'administrator');
+        Helper::addPanel(2, 'ShortLinks/panel.php', '短链管理', '短链接管理', 'administrator');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin', 'replace');
@@ -64,7 +62,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         Helper::removeRoute('go');
         Helper::removeAction('shortlinks');
         Helper::removePanel(2, 'ShortLinks/panel.php');
-        return ('短链接插件已被禁用，但是数据表并没有被删除');
+        return ('短链接插件已被禁用，但是其表（_shortlinks）并没有被删除！');
     }
 
     /**
