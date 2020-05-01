@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.1.0 a1
+ * @version 1.1.0 a2
  * @link https://github.com/benzBrake/ShortLinks
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -24,19 +24,22 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $adapter = $db->getAdapterName();
         if ("Pdo_SQLite" === $adapter || "SQLite" === $adapter) {
             $db->query(" CREATE TABLE IF NOT EXISTS " . $shortlinks . " (
-			   id INTEGER PRIMARY KEY, 
+			   id INTEGER PRIMARY KEY,
 			   key TEXT,
 			   target TEXT,
 			   count NUMERIC)");
         }
         if ("Pdo_Mysql" === $adapter || "Mysql" === $adapter) {
+            $dbConfig = Typecho_Db::get()->getConfig()[0];
+            $engine = $dbConfig->engine;
+            $charset = $dbConfig->charset;
             $db->query("CREATE TABLE IF NOT EXISTS " . $shortlinks . " (
 				  `id` int(8) NOT NULL AUTO_INCREMENT,
 				  `key` varchar(64) NOT NULL,
 				  `target` varchar(10000) NOT NULL,
 				  `count` int(8) DEFAULT '0',
 				  PRIMARY KEY (`id`)
-				) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+				) ENGINE=${engine} DEFAULT CHARSET=${charset} AUTO_INCREMENT=1");
         }
         Helper::addAction('shortlinks', 'ShortLinks_Action');
         Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
@@ -81,25 +84,30 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $template_files = scandir(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates');
         $go_templates = array('NULL' => '不使用');
         foreach ($template_files as $item) {
-            if (PATH_SEPARATOR !== ':')
+            if (PATH_SEPARATOR !== ':') {
                 $item = mb_convert_encoding($item, "UTF-8", "GBK");
+            }
+
             $name = mb_split("\.", $item)[0];
-            if (empty($name)) continue;
+            if (empty($name)) {
+                continue;
+            }
+
             $go_templates[$name] = $name;
         }
         $edit = new Typecho_Widget_Helper_Form_Element_Select('go_template', $go_templates, '默认模板', _t('跳转页面模板'));
         $form->addInput($edit);
-        $edit = new Typecho_Widget_Helper_Form_Element_Text('go_delay', NULL, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Text('go_delay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
         $form->addInput($edit);
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后会帮你文章中的链接新增target属性'));
         $form->addInput($radio);
-        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convert_custom_field', NULL, NULL, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
+        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convert_custom_field', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
         $form->addInput($textarea);
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('null_referer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('空Referer开关'), _t('开启后会允许空Referer'));
         $form->addInput($radio);
-        $referer_list = new Typecho_Widget_Helper_Form_Element_Textarea('referer_list', NULL, NULL, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
+        $referer_list = new Typecho_Widget_Helper_Form_Element_Textarea('referer_list', null, null, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
         $form->addInput($referer_list);
-        $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', NULL, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
+        $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
         $form->addInput($nonConvertList);
     }
 
@@ -147,8 +155,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             }
             if (($widget instanceof Widget_Archive) || ($widget instanceof Widget_Abstract_Comments)) {
                 $fields = unserialize($widget->fields);
-                if (is_array($fields) && array_key_exists("noshort", $fields))
+                if (is_array($fields) && array_key_exists("noshort", $fields)) {
                     return $text;
+                }
+
                 // 文章内容和评论内容处理
                 @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
                 if ($matches) {
@@ -184,9 +194,18 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
         $nonConvertList = self::textareaToArr($pluginOption->nonConvertList); // 不转换列表
         if ($check) {
-            if (strpos($link, '://') !== false && strpos($link, rtrim($siteUrl, '/')) !== false) return $link; //本站链接不处理
-            if (self::checkDomain($link, $nonConvertList)) return $link; // 不转换列表中的不处理
-            if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i', $link)) return $link; // 图片不处理
+            if (strpos($link, '://') !== false && strpos($link, rtrim($siteUrl, '/')) !== false) {
+                return $link;
+            }
+            //本站链接不处理
+            if (self::checkDomain($link, $nonConvertList)) {
+                return $link;
+            }
+            // 不转换列表中的不处理
+            if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i', $link)) {
+                return $link;
+            }
+            // 图片不处理
         }
         return $siteUrl . $rewrite . str_replace('[key]', str_replace("/", "|", base64_encode(htmlspecialchars_decode($link))), $linkBase);
     }
@@ -201,8 +220,14 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      */
     public static function checkDomain($url, $arr)
     {
-        if ($arr === null) return false;
-        if (count($arr) === 0) return false;
+        if ($arr === null) {
+            return false;
+        }
+
+        if (count($arr) === 0) {
+            return false;
+        }
+
         foreach ($arr as $a) {
             if (strpos($url, $a) !== false) {
                 return true;
@@ -222,7 +247,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     public static function textareaToArr($textarea)
     {
         $str = str_replace(array("\r\n", "\r", "\n"), "|", $textarea);
-        if ($str == "") return null;
+        if ($str == "") {
+            return null;
+        }
+
         return explode("|", $str);
     }
 }
