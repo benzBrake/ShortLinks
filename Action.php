@@ -83,7 +83,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         $siteUrl = preg_replace("/https?:\/\//", "", Typecho_Widget::widget('Widget_Options')->siteUrl);
         $pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
         $referer = $this->request->getReferer();
-        $template = $pOption->goTemplate == null ? 'default' : $pOption->goTemplate;
+        $template = $pOption->goTemplate == 'NULL' ? null : $pOption->goTemplate;
         // 允许空 referer
         if (empty($referer) && $pOption->nullReferer === "1") {
             $referer = $siteUrl;
@@ -121,7 +121,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
         }
 
-        if ($pOption->goTemplate === 'NULL') {
+        if ($template === 'NULL') {
             // 无跳转页面
             $this->response->redirect(htmlspecialchars_decode($target), 301);
         } else {
