@@ -31,7 +31,6 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         }
         if ("Pdo_Mysql" === $adapter || "Mysql" === $adapter) {
             $dbConfig = Typecho_Db::get()->getConfig()[0];
-            $engine = $dbConfig->engine;
             $charset = $dbConfig->charset;
             $db->query("CREATE TABLE IF NOT EXISTS " . $shortlinks . " (
 				  `id` int(8) NOT NULL AUTO_INCREMENT,
@@ -39,7 +38,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
 				  `target` varchar(10000) NOT NULL,
 				  `count` int(8) DEFAULT '0',
 				  PRIMARY KEY (`id`)
-				) ENGINE=${engine} DEFAULT CHARSET=${charset} AUTO_INCREMENT=1");
+				) DEFAULT CHARSET=${charset} AUTO_INCREMENT=1");
         }
         Helper::addAction('shortlinks', 'ShortLinks_Action');
         Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
