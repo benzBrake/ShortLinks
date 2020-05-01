@@ -95,7 +95,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
 
             $go_templates[$name] = $name;
         }
-        $edit = new Typecho_Widget_Helper_Form_Element_Select('go_template', $go_templates, '默认模板', _t('跳转页面模板'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Select('go_template', $go_templates, 'default', _t('跳转页面模板'));
         $form->addInput($edit);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('go_delay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
         $form->addInput($edit);

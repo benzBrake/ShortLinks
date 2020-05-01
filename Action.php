@@ -11,7 +11,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
 
-    public function __construct($request, $response, $params = NULL)
+    public function __construct($request, $response, $params = null)
     {
         parent::__construct($request, $response, $params);
         $this->db = Typecho_Db::get();
@@ -27,15 +27,15 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         $key = $key ? $key : Typecho_Common::randString(8);
         $target = $this->request->target;
         if ($target === "" || $target === "http://") {
-            $this->widget('Widget_Notice')->set(_t('请输入目标链接。'), NULL, 'error');
+            $this->widget('Widget_Notice')->set(_t('请输入目标链接。'), null, 'error');
         } //判断key是否被占用
         elseif ($this->getTarget($key)) {
-            $this->widget('Widget_Notice')->set(_t('该key已被使用，请更换key值。'), NULL, 'error');
+            $this->widget('Widget_Notice')->set(_t('该key已被使用，请更换key值。'), null, 'error');
         } else {
             $links = array(
                 'key' => $key,
                 'target' => $this->request->target,
-                'count' => 0
+                'count' => 0,
             );
             $insertId = $this->db->query($this->db->insert('table.shortlinks')->rows($links));
         }
@@ -55,7 +55,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         } else {
             if ($id) {
                 $this->db->query($this->db->update('table.shortlinks')->rows(array('target' => $target))
-                    ->where('id = ?', $id));
+                        ->where('id = ?', $id));
                 Typecho_Response::throwJson('success');
             }
         }
@@ -69,7 +69,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
     public function del($id)
     {
         $this->db->query($this->db->delete('table.shortlinks')
-            ->where('id = ?', $id));
+                ->where('id = ?', $id));
 
     }
 
@@ -84,9 +84,12 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         $pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
         $requestString = str_replace("|", "/", $key); // 特殊字符处理
         $referer = $this->request->getReferer();
+        $template = $pOption->go_template == null ? 'default' : $pOption->go_template;
         // 允许空 referer
-        if (empty($referer) && $pOption->null_referer === "1")
+        if (empty($referer) && $pOption->null_referer === "1") {
             $referer = $siteUrl;
+        }
+
         $referer_list = ShortLinks_Plugin::textareaToArr($pOption->referer_list); // 允许的referer列表
         $target = $this->getTarget($key);
         // 设置nofollow属性
@@ -95,12 +98,12 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             // 自定义短链
             // 增加统计
             $count = $this->db->fetchObject($this->db->select('count')
-                ->from('table.shortlinks')
-                ->where('key = ?', $key))->count;
+                    ->from('table.shortlinks')
+                    ->where('key = ?', $key))->count;
             $count = $count + 1;
             $this->db->query($this->db->update('table.shortlinks')
-                ->rows(array('count' => $count))
-                ->where('key = ?', $key));
+                    ->rows(array('count' => $count))
+                    ->where('key = ?', $key));
         } else if ($requestString === base64_encode(base64_decode($requestString))) {
             // 自动转换链接处理
             $target = base64_decode($requestString);
@@ -123,12 +126,13 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             // 无跳转页面
             $this->response->redirect(htmlspecialchars_decode($target), 301);
         } else {
-            $filename = __DIR__ . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $pOption->go_template . '.html';
-            if (PATH_SEPARATOR !== ':')
+            $filename = __DIR__ . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $template . '.html';
+            if (PATH_SEPARATOR !== ':') {
                 $filename = mb_convert_encoding($filename, 'GBK', "auto");
+            }
             $contents = file_get_contents($filename);
-            $html = str_replace(array('{{url}}', '{{delay}}'), array($target, $pOption->go_delay),
-                $contents);
+            $html = $filename;
+            $html = str_replace(array('{{url}}', '{{delay}}'), array($target, $pOption->go_delay), $contents);
             _e($html);
             exit();
         }
@@ -143,12 +147,12 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
     public function getTarget($key)
     {
         $target = $this->db->fetchRow($this->db->select('target')
-            ->from('table.shortlinks')
-            ->where(' key = ?', $key));
+                ->from('table.shortlinks')
+                ->where(' key = ?', $key));
         if (isset($target['target'])) {
             return $target['target'];
         } else {
-            return FALSE;
+            return false;
         }
     }
 
@@ -173,5 +177,3 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->response->goBack();
     }
 }
-
-?>
