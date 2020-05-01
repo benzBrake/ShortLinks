@@ -79,10 +79,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     {
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('convert', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('外链转内链'), _t('开启后会帮你把外链转换成内链'));
         $form->addInput($radio);
-        $radio = new Typecho_Widget_Helper_Form_Element_Radio('convert_comment_link', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('转换评论者链接'), _t('开启后会帮你把评论者链接转换成内链'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('convertCommentLink', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('转换评论者链接'), _t('开启后会帮你把评论者链接转换成内链'));
         $form->addInput($radio);
         $template_files = scandir(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates');
-        $go_templates = array('NULL' => '不使用');
+        $goTemplates = array('NULL' => '不使用');
         foreach ($template_files as $item) {
             if (PATH_SEPARATOR !== ':') {
                 $item = mb_convert_encoding($item, "UTF-8", "GBK");
@@ -93,20 +93,20 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                 continue;
             }
 
-            $go_templates[$name] = $name;
+            $goTemplates[$name] = $name;
         }
-        $edit = new Typecho_Widget_Helper_Form_Element_Select('go_template', $go_templates, 'default', _t('跳转页面模板'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Select('goTemplate', $goTemplates, 'default', _t('跳转页面模板'));
         $form->addInput($edit);
-        $edit = new Typecho_Widget_Helper_Form_Element_Text('go_delay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
         $form->addInput($edit);
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后会帮你文章中的链接新增target属性'));
         $form->addInput($radio);
-        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convert_custom_field', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
+        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
         $form->addInput($textarea);
-        $radio = new Typecho_Widget_Helper_Form_Element_Radio('null_referer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('空Referer开关'), _t('开启后会允许空Referer'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('nullReferer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('空Referer开关'), _t('开启后会允许空Referer'));
         $form->addInput($radio);
-        $referer_list = new Typecho_Widget_Helper_Form_Element_Textarea('referer_list', null, null, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
-        $form->addInput($referer_list);
+        $refererList = new Typecho_Widget_Helper_Form_Element_Textarea('refererList', null, null, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
+        $form->addInput($refererList);
         $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
         $form->addInput($nonConvertList);
     }
@@ -139,7 +139,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         if ($pluginOption->convert == 1) {
             if (!is_string($text) && $text instanceof Widget_Archive) {
                 // 自定义字段处理
-                $fieldsList = self::textareaToArr($pluginOption->convert_custom_field);
+                $fieldsList = self::textareaToArr($pluginOption->convertCustomField);
                 if ($fieldsList) {
                     foreach ($fieldsList as $field) {
                         if (isset($text->fields[$field])) {
@@ -167,7 +167,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                     }
                 }
             }
-            if ($pluginOption->convert_comment_link == 1 && $widget instanceof Widget_Abstract_Comments) {
+            if ($pluginOption->convertCommentLink == 1 && $widget instanceof Widget_Abstract_Comments) {
                 // 评论者链接处理
                 $url = $text['url'];
                 if (strpos($url, '://') !== false && strpos($url, rtrim($siteUrl, '/')) === false) {

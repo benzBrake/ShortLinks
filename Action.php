@@ -83,13 +83,13 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         $siteUrl = preg_replace("/https?:\/\//", "", Typecho_Widget::widget('Widget_Options')->siteUrl);
         $pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
         $referer = $this->request->getReferer();
-        $template = $pOption->go_template == null ? 'default' : $pOption->go_template;
+        $template = $pOption->goTemplate == null ? 'default' : $pOption->goTemplate;
         // 允许空 referer
-        if (empty($referer) && $pOption->null_referer === "1") {
+        if (empty($referer) && $pOption->nullReferer === "1") {
             $referer = $siteUrl;
         }
 
-        $referer_list = ShortLinks_Plugin::textareaToArr($pOption->referer_list); // 允许的referer列表
+        $refererList = ShortLinks_Plugin::textareaToArr($pOption->refererList); // 允许的referer列表
         $target = $this->getTarget($key);
         // 设置nofollow属性
         $this->response->setHeader('X-Robots-Tag', 'noindex, nofollow');
@@ -108,7 +108,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             $target = ShortLinks_Plugin::urlSafeB64Decode($requestString);
             $allow_redirect = false; // 默认不允许跳转
             // 检查 referer
-            $allow_redirect = ShortLinks_Plugin::checkDomain($referer, $referer_list);
+            $allow_redirect = ShortLinks_Plugin::checkDomain($referer, $refererList);
             if (strpos($referer, $siteUrl) !== false) {
                 $allow_redirect = true;
             }
@@ -121,7 +121,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
         }
 
-        if ($pOption->go_template === 'NULL') {
+        if ($pOption->goTemplate === 'NULL') {
             // 无跳转页面
             $this->response->redirect(htmlspecialchars_decode($target), 301);
         } else {
