@@ -30,8 +30,11 @@ Typecho 外链转内链插件，支持正文和评论者链接。
 ### 模板使用 Template Usage
 
 模板功能自 1.1.0 b1 开始支持更多的字段替换。
+
 支持 Typecho 选项和主题选项字段替换。
+
 就是平常用 `$this->options->logoUrl` 这样的形式调用的字段，可以直接在模板里使用 `{{logoUrl}}` 定义，ShortLinks 插件会自动替换。
+
 如果发现有不支持的指端，别尝试了，就是 ShortLinks 没适配。
 
 ### 计划功能 Todo
