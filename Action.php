@@ -79,10 +79,9 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
      */
     public function shortlink()
     {
-        $key = $this->request->key;
+        $requestString = $this->request->key;
         $siteUrl = preg_replace("/https?:\/\//", "", Typecho_Widget::widget('Widget_Options')->siteUrl);
         $pOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
-        $requestString = str_replace("|", "/", $key); // 特殊字符处理
         $referer = $this->request->getReferer();
         $template = $pOption->go_template == null ? 'default' : $pOption->go_template;
         // 允许空 referer
@@ -104,9 +103,9 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             $this->db->query($this->db->update('table.shortlinks')
                     ->rows(array('count' => $count))
                     ->where('key = ?', $key));
-        } else if ($requestString === base64_encode(base64_decode($requestString))) {
+        } else if ($requestString === ShortLinks_Plugin::urlSafeB64Encode(ShortLinks_Plugin::urlSafeB64Decode($requestString))) {
             // 自动转换链接处理
-            $target = base64_decode($requestString);
+            $target = ShortLinks_Plugin::urlSafeB64Decode($requestString);
             $allow_redirect = false; // 默认不允许跳转
             // 检查 referer
             $allow_redirect = ShortLinks_Plugin::checkDomain($referer, $referer_list);

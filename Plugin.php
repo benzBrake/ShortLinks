@@ -207,7 +207,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             }
             // 图片不处理
         }
-        return $siteUrl . $rewrite . str_replace('[key]', str_replace("/", "|", base64_encode(htmlspecialchars_decode($link))), $linkBase);
+        return $siteUrl . $rewrite . str_replace('[key]', self::urlSafeB64Encode(htmlspecialchars_decode($link)), $linkBase);
     }
 
     /**
@@ -252,5 +252,34 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         }
 
         return explode("|", $str);
+    }
+    /**
+     * Base64 解码
+     *
+     * @param string $str
+     * @return string
+     * @date 2020-05-01
+     */
+    public static function urlSafeB64Decode($str)
+    {
+        $data = str_replace(array('-', '_'), array('+', '/'), $str);
+        $mod = strlen($data) % 4;
+        if ($mod4) {
+            $data .= substr('====', $mod);
+        }
+        return base64_decode($data);
+    }
+    /**
+     * Base64 编码
+     *
+     * @param string $str
+     * @return string
+     * @date 2020-05-01
+     */
+    public function urlSafeB64Encode($str)
+    {
+        $data = base64_encode($str);
+        $data = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
+        return $data;
     }
 }
