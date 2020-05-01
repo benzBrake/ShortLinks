@@ -130,7 +130,6 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
                 $filename = mb_convert_encoding($filename, 'GBK', "auto");
             }
             $contents = file_get_contents($filename);
-            $html = $filename;
             $html = str_replace(array('{{url}}', '{{delay}}'), array($target, $pOption->goDelay), $contents);
             _e($html);
             exit();
