@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.1.0 a2
+ * @version 1.1.0 b1
  * @link https://github.com/benzBrake/ShortLinks
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -99,6 +99,9 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($edit);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
         $form->addInput($edit);
+        $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('3'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用<code>{siteCreatedYear}</code>来代表建站年份'));
+        $form->addInput($edit);
+
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后会帮你文章中的链接新增target属性'));
         $form->addInput($radio);
         $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));

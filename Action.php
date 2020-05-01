@@ -10,11 +10,13 @@
 class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
-
+    private $options;
     public function __construct($request, $response, $params = null)
     {
         parent::__construct($request, $response, $params);
         $this->db = Typecho_Db::get();
+        $this->options = self::getOptions();
+        $this->options->setDefault('logoUrl=' . Helper::options()->pluginUrl . '/ShortLinks/logo.png&siteCreatedYear=' . Helper::options()->plugin('ShortLinks')->siteCreatedYear . '&currentYear=' . date('Y'));
     }
 
     /**
@@ -120,8 +122,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         } else {
             throw new Typecho_Widget_Exception(_t('您访问的网页不存在'), 404);
         }
-
-        if ($template === 'NULL') {
+        if ($template === 'NULL' || $template === null) {
             // 无跳转页面
             $this->response->redirect(htmlspecialchars_decode($target), 301);
         } else {
@@ -131,11 +132,11 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             }
             $contents = file_get_contents($filename);
             $html = str_replace(array('{{url}}', '{{delay}}'), array($target, $pOption->goDelay), $contents);
-            _e($html);
+            echo preg_replace_callback("/\{\{([_a-z0-9]+)\}\}/i",
+                array(__CLASS__, '__relpaceCallback'), $html);
             exit();
         }
     }
-
     /**
      * 获取目标链接
      *
@@ -173,5 +174,54 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->on($this->request->is('del'))->del($this->request->del);
         $this->on($this->request->is('resetLink'))->resetLink();
         $this->response->goBack();
+    }
+
+    public function getOptions()
+    {
+        $values = $this->db->fetchAll($this->db->select('name', 'value')->from('table.options')->where('user = 0'));
+        $options = array();
+        foreach ($values as $value) {
+            if (strpos($value['name'], "plugin:") === 0) {
+                continue;
+            }
+
+            $options[$value['name']] = $value['value'];
+        }
+        /** 主题变量重载 */
+        if (!empty($options['theme:' . $options['theme']])) {
+            $themeOptions = null;
+
+            /** 解析变量 */
+            if ($themeOptions = unserialize($options['theme:' . $options['theme']])) {
+                /** 覆盖变量 */
+                $options = array_merge($options, $themeOptions);
+            }
+        }
+        $options['rootUrl'] = defined('__TYPECHO_ROOT_URL__') ? __TYPECHO_ROOT_URL__ : $this->request->getRequestRoot();
+        if (defined('__TYPECHO_ADMIN__')) {
+            /** 识别在admin目录中的情况 */
+            $adminDir = '/' . trim(defined('__TYPECHO_ADMIN_DIR__') ? __TYPECHO_ADMIN_DIR__ : '/admin/', '/');
+            $options['rootUrl'] = substr($options['rootUrl'], 0, -strlen($adminDir));
+        }
+        if (defined('__TYPECHO_SITE_URL__')) {
+            $options['siteUrl'] = __TYPECHO_SITE_URL__;
+        } else if (defined('__TYPECHO_DYNAMIC_SITE_URL__') && __TYPECHO_DYNAMIC_SITE_URL__) {
+            $options['siteUrl'] = $options['rootUrl'];
+        }
+        $options['originalSiteUrl'] = $options['siteUrl'];
+        $options['siteUrl'] = Typecho_Common::url(null, $options['siteUrl']);
+
+        return Typecho_Config::factory($options);
+    }
+    /**
+     * 替换回调
+     *
+     * @param Array $matches
+     * @return String
+     * @date 2020-05-01
+     */
+    private function __relpaceCallback($matches)
+    {
+        return $this->options->{$matches[1]};
     }
 }
