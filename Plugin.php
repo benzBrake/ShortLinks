@@ -31,7 +31,6 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         }
         if ("Pdo_Mysql" === $adapter || "Mysql" === $adapter) {
             $dbConfig = Typecho_Db::get()->getConfig()[0];
-            $engine = $dbConfig->engine;
             $charset = $dbConfig->charset;
             $db->query("CREATE TABLE IF NOT EXISTS " . $shortlinks . " (
 				  `id` int(8) NOT NULL AUTO_INCREMENT,
@@ -39,7 +38,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
 				  `target` varchar(10000) NOT NULL,
 				  `count` int(8) DEFAULT '0',
 				  PRIMARY KEY (`id`)
-				) ENGINE=${engine} DEFAULT CHARSET=${charset} AUTO_INCREMENT=1");
+				) DEFAULT CHARSET=${charset} AUTO_INCREMENT=1");
         }
         Helper::addAction('shortlinks', 'ShortLinks_Action');
         Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
@@ -82,7 +81,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('convertCommentLink', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('转换评论者链接'), _t('开启后会帮你把评论者链接转换成内链'));
         $form->addInput($radio);
         $template_files = scandir(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'templates');
-        $goTemplates = array('NULL' => '不使用');
+        $goTemplates = array('NULL' => '禁用');
         foreach ($template_files as $item) {
             if (PATH_SEPARATOR !== ':') {
                 $item = mb_convert_encoding($item, "UTF-8", "GBK");
@@ -97,20 +96,20 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         }
         $edit = new Typecho_Widget_Helper_Form_Element_Select('goTemplate', $goTemplates, 'NULL', _t('跳转页面模板'));
         $form->addInput($edit);
-        $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间（秒）'));
         $form->addInput($edit);
-        $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用<code>{siteCreatedYear}</code>来代表建站年份'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用 <code>{siteCreatedYear}</code> 来代表建站年份'));
         $form->addInput($edit);
 
-        $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后会帮你文章中的链接新增target属性'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后会帮你文章中的链接新增 target 属性'));
         $form->addInput($radio);
-        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个(实验性功能)'));
+        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个（实验性功能）'));
         $form->addInput($textarea);
-        $radio = new Typecho_Widget_Helper_Form_Element_Radio('nullReferer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('空Referer开关'), _t('开启后会允许空Referer'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('nullReferer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('允许空 referer'), _t('开启后会允许空 referer'));
         $form->addInput($radio);
         $refererList = new Typecho_Widget_Helper_Form_Element_Textarea('refererList', null, null, _t('referer 白名单'), _t('在这里设置 referer 白名单，一行一个'));
         $form->addInput($refererList);
-        $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单(评论者链接不生效)'));
+        $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单（评论者链接不生效）'));
         $form->addInput($nonConvertList);
     }
 
