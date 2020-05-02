@@ -278,7 +278,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * @return string
      * @date 2020-05-01
      */
-    public function urlSafeB64Encode($str)
+    public static function urlSafeB64Encode($str)
     {
         $data = base64_encode($str);
         $data = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
