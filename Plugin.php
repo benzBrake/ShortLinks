@@ -48,7 +48,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Archive')->singleHandle = array('ShortLinks_Plugin', 'replace');
-        return ('数据表 ' . $shortlinks . ' 创建成功, 插件已经成功激活!');
+        return ('数据表 ' . $shortlinks . ' 创建成功，插件已经成功激活！');
     }
 
     /**
@@ -61,10 +61,18 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      */
     public static function deactivate()
     {
+        $config = Typecho_Widget::widget('Widget_Options')->plugin('ShortLinks');
+        if ($config->isDrop == 0) {
+            $db = Typecho_Db::get();
+            $db->query("DROP TABLE `{$db->getPrefix()}shortlinks`", Typecho_Db::WRITE);
+            return ('短链接插件已被禁用，其表（_shortlinks）已被删除！');
+        }
+        else {
+            return ('短链接插件已被禁用，但是其表（_shortlinks）并没有被删除！');
+        }
         Helper::removeRoute('go');
         Helper::removeAction('shortlinks');
         Helper::removePanel(2, 'ShortLinks/panel.php');
-        return ('短链接插件已被禁用，但是其表（_shortlinks）并没有被删除！');
     }
 
     /**
@@ -98,6 +106,8 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($edit);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间（秒）'));
         $form->addInput($edit);
+        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除',), '1', '彻底清理', '请选择是否在禁用插件时，删除数据表');
+        $form->addInput($isDrop);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用 <code>{siteCreatedYear}</code> 来代表建站年份'));
         $form->addInput($edit);
 
