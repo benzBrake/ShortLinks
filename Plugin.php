@@ -105,8 +105,6 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($edit);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间（秒）'));
         $form->addInput($edit);
-        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除'), '1', '彻底清理', '请选择是否在禁用插件时，删除数据表');
-        $form->addInput($isDrop);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用 <code>{siteCreatedYear}</code> 来代表建站年份'));
         $form->addInput($edit);
 
@@ -124,6 +122,8 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($refererList);
         $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单（评论者链接不生效）'));
         $form->addInput($nonConvertList);
+        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除',), '1', '彻底卸载', '请选择是否在禁用插件时，删除数据表');
+        $form->addInput($isDrop);
     }
 
     /**
