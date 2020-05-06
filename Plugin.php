@@ -66,8 +66,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             $db = Typecho_Db::get();
             $db->query("DROP TABLE `{$db->getPrefix()}shortlinks`", Typecho_Db::WRITE);
             return ('短链接插件已被禁用，其表（_shortlinks）已被删除！');
-        }
-        else {
+        } else {
             return ('短链接插件已被禁用，但是其表（_shortlinks）并没有被删除！');
         }
         Helper::removeRoute('go');
@@ -109,8 +108,12 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用 <code>{siteCreatedYear}</code> 来代表建站年份'));
         $form->addInput($edit);
 
-        $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后会帮你文章中的链接新增 target 属性'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后给文章中的链接新增 target 属性'));
         $form->addInput($radio);
+
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('authorPermalinkTarget', array('1' => _t('开启'), '0' => _t('关闭')), '0', _t('新窗口打开评论者链接'), _t('开启后给评论者链接新增 target 属性。（URL 中 target 属性，开启可能会引起主题异常）'));
+        $form->addInput($radio);
+
         $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个（实验性功能）'));
         $form->addInput($textarea);
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('nullReferer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('允许空 referer'), _t('开启后会允许空 referer'));
@@ -184,6 +187,9 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                 $url = $text['url'];
                 if (strpos($url, '://') !== false && strpos($url, rtrim($siteUrl, '/')) === false) {
                     $text['url'] = self::convertLink($url, false);
+                    if ($pluginOption->authorPermalinkTarget) {
+                        $text['url'] = $text['url'] . '" target="_blank';
+                    }
                 }
             }
         }
