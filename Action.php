@@ -92,7 +92,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         }
 
         $refererList = ShortLinks_Plugin::textareaToArr($pOption->refererList); // 允许的referer列表
-        $target = $this->getTarget($key);
+        $target = $this->getTarget($requestString);
         // 设置nofollow属性
         $this->response->setHeader('X-Robots-Tag', 'noindex, nofollow');
         if ($target) {
@@ -133,7 +133,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             $contents = file_get_contents($filename);
             $html = str_replace(array('{{url}}', '{{delay}}'), array($target, $pOption->goDelay), $contents);
             echo preg_replace_callback("/\{\{([_a-z0-9]+)\}\}/i",
-                array(__CLASS__, '__relpaceCallback'), $html);
+               array(__CLASS__, '__relpaceCallback'), $html);
             exit();
         }
     }

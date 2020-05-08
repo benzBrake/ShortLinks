@@ -282,7 +282,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     {
         $data = str_replace(array('-', '_'), array('+', '/'), $str);
         $mod = strlen($data) % 4;
-        if ($mod4) {
+        if ($mod) {
             $data .= substr('====', $mod);
         }
         return base64_decode($data);
