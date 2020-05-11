@@ -62,6 +62,9 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     public static function deactivate()
     {
         $config = Typecho_Widget::widget('Widget_Options')->plugin('ShortLinks');
+        Helper::removeRoute('go');
+        Helper::removeAction('shortlinks');
+        Helper::removePanel(2, 'ShortLinks/panel.php');
         if ($config->isDrop == 0) {
             $db = Typecho_Db::get();
             $db->query("DROP TABLE `{$db->getPrefix()}shortlinks`", Typecho_Db::WRITE);
@@ -69,9 +72,6 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         } else {
             return ('短链接插件已被禁用，但是其表（_shortlinks）并没有被删除！');
         }
-        Helper::removeRoute('go');
-        Helper::removeAction('shortlinks');
-        Helper::removePanel(2, 'ShortLinks/panel.php');
     }
 
     /**
@@ -122,7 +122,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($refererList);
         $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单（评论者链接不生效）'));
         $form->addInput($nonConvertList);
-        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除',), '1', '彻底卸载', '请选择是否在禁用插件时，删除数据表');
+        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除'), '1', '彻底卸载', '请选择是否在禁用插件时，删除数据表');
         $form->addInput($isDrop);
     }
 
