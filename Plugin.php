@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.1.0 b1
+ * @version 1.1.0 b2
  * @link https://github.com/benzBrake/ShortLinks
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -47,6 +47,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin', 'replace');
+        Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin', 'forceConvert');
         Typecho_Plugin::factory('Widget_Archive')->singleHandle = array('ShortLinks_Plugin', 'replace');
         return ('数据表 ' . $shortlinks . ' 创建成功，插件已经成功激活！');
     }
@@ -105,16 +106,19 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($edit);
         $edit = new Typecho_Widget_Helper_Form_Element_Text('goDelay', null, _t('3'), _t('跳转延时'), _t('跳转页面停留时间（秒）'));
         $form->addInput($edit);
-        $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用 <code>{siteCreatedYear}</code> 来代表建站年份'));
+        $edit = new Typecho_Widget_Helper_Form_Element_Text('siteCreatedYear', null, _t('2020'), _t('建站年份'), _t('建站年份，用于模板内容替换模板中使用 <code>{{siteCreatedYear}}</code> 来代表建站年份'));
         $form->addInput($edit);
 
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('target', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('新窗口打开文章中的链接'), _t('开启后给文章中的链接新增 target 属性'));
         $form->addInput($radio);
 
-        $radio = new Typecho_Widget_Helper_Form_Element_Radio('authorPermalinkTarget', array('1' => _t('开启'), '0' => _t('关闭')), '0', _t('新窗口打开评论者链接'), _t('开启后给评论者链接新增 target 属性。（URL 中 target 属性，开启可能会引起主题异常）'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('authorPermalinkTarget', array('1' => _t('开启'), '0' => _t('关闭')), '0', _t('新窗口打开评论者链接'), _t('开启后给评论者链接新增 target 属性。（URL 中 target 属性，<b style="color:red">开启可能会引起主题异常</b>）'));
         $form->addInput($radio);
 
-        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个（实验性功能）'));
+        $radio = new Typecho_Widget_Helper_Form_Element_Radio('forceSwitch', array('1' => _t('开启'), '0' => _t('关闭')), '0', _t('强力模式'), _t('主要为了支持 editor.md / vditor 等前台解析<b style="color:red">（实验性功能）</b>'));
+        $form->addInput($radio);
+
+        $textarea = new Typecho_Widget_Helper_Form_Element_Textarea('convertCustomField', null, null, _t('需要处理的自定义字段'), _t('在这里设置需要处理的自定义字段，一行一个<b style="color:red">（实验性功能）</b>'));
         $form->addInput($textarea);
         $radio = new Typecho_Widget_Helper_Form_Element_Radio('nullReferer', array('1' => _t('开启'), '0' => _t('关闭')), '1', _t('允许空 referer'), _t('开启后会允许空 referer'));
         $form->addInput($radio);
@@ -122,7 +126,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $form->addInput($refererList);
         $nonConvertList = new Typecho_Widget_Helper_Form_Element_Textarea('nonConvertList', null, _t("b0.upaiyun.com" . PHP_EOL . "glb.clouddn.com" . PHP_EOL . "qbox.me" . PHP_EOL . "qnssl.com"), _t('外链转换白名单'), _t('在这里设置外链转换白名单（评论者链接不生效）'));
         $form->addInput($nonConvertList);
-        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除'), '1', '彻底卸载', '请选择是否在禁用插件时，删除数据表');
+        $isDrop = new Typecho_Widget_Helper_Form_Element_Radio('isDrop', array('0' => '删除', '1' => '不删除'), '1', '彻底卸载(<b style="color:red">请慎重选择</b>)', '请选择是否在禁用插件时，删除数据表');
         $form->addInput($isDrop);
     }
 
@@ -148,7 +152,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     public static function replace($text, $widget, $lastResult)
     {
         $text = empty($lastResult) ? $text : $lastResult;
-        $pluginOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+        $pluginOption = self::options(); // 插件选项
         $siteUrl = Helper::options()->siteUrl;
         $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
         if ($pluginOption->convert == 1) {
@@ -163,6 +167,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                                 foreach ($matches[2] as $link) {
                                     $text->fields[$field] = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"", $text->fields[$field]);
                                 }
+                            }
+                            if ($pluginOption->forceSwitch == 1) {
+                                // 强力模式
+                                $text->fields[$field] = self::autoLink($text->fields[$field]);
                             }
                         }
                     }
@@ -206,26 +214,58 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     public static function convertLink($link, $check = true)
     {
         $rewrite = (Helper::options()->rewrite) ? '' : 'index.php/'; // 伪静态处理
-        $pluginOption = Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks'); // 插件选项
+        $pluginOption = self::options();
         $linkBase = ltrim(rtrim(Typecho_Router::get('go')['url'], '/'), '/'); // 防止链接形式修改后不能用
         $siteUrl = Helper::options()->siteUrl;
-        $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
         $nonConvertList = self::textareaToArr($pluginOption->nonConvertList); // 不转换列表
         if ($check) {
             if (strpos($link, '://') !== false && strpos($link, rtrim($siteUrl, '/')) !== false) {
                 return $link;
             }
-            //本站链接不处理
+            // 本站链接不处理 不转换列表中的不处理
             if (self::checkDomain($link, $nonConvertList)) {
                 return $link;
             }
-            // 不转换列表中的不处理
+
+            // 图片不处理
             if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i', $link)) {
                 return $link;
             }
-            // 图片不处理
         }
         return $siteUrl . $rewrite . str_replace('[key]', self::urlSafeB64Encode(htmlspecialchars_decode($link)), $linkBase);
+    }
+
+    /**
+     * 强力转换
+     *
+     * @param Array $value
+     * @param mixed $widget
+     * @param mixed $lastResult
+     * @return Array
+     */
+    public static function forceConvert($value, $widget, $lastResult)
+    {
+        $value = empty($lastResult) ? $value : $lastResult;
+        if (self::options()->forceSwitch == 1) {
+            $value['text'] = self::autoLink($value['text']);
+        }
+        return $value;
+    }
+
+    /**
+     * 文本链接转A标签
+     *
+     * @param string $content
+     * @return string
+     */
+    public static function autoLink($content)
+    {
+
+        $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
+        $target = (self::options()->target) ? ' target="_blank" ' : ''; // 新窗口打开
+        return preg_replace_callback($url, function ($matches) use ($target) {
+            return '<a href="' . self::convertLink($matches[0]) . '" title="' . $matches[0] . '"' . $target . '>' . $matches[0] . '</a>';
+        }, $content);
     }
 
     /**
@@ -299,5 +339,15 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $data = base64_encode($str);
         $data = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
         return $data;
+    }
+
+    /**
+     * 获得配置信息
+     *
+     * @return Typecho_Options
+     */
+    public static function options()
+    {
+        return Typecho_Widget::widget('Widget_Options')->Plugin('ShortLinks');
     }
 }
