@@ -1,6 +1,4 @@
 <?php
-ini_set("display_errors","On");
-error_reporting(E_ALL);
 /**
  * 把外部链接转换为指定内部链接
  *
