@@ -1,5 +1,6 @@
 <?php
-
+ini_set("display_errors","On");
+error_reporting(E_ALL);
 /**
  * 把外部链接转换为指定内部链接
  *
@@ -10,6 +11,7 @@
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
 {
+
     /**
      * 激活插件方法,如果激活失败,直接抛出异常
      *
@@ -183,10 +185,21 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                 }
 
                 // 文章内容和评论内容处理
-                @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
+                 if(is_array($text)){
+                    // 文章内容和评论内容处理
+                    @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text['text'], $matches);
+                }else{
+                    @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
+                }
+                
+                //@preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
                 if ($matches) {
                     foreach ($matches[2] as $link) {
-                        $text = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"" . $target, $text);
+                        if(is_array($text)){
+                            $text["text"] = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"" . $target, $text["text"]);
+                        }else{
+                            $text = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"" . $target, $text);
+                        }
                     }
                 }
             }
