@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.1.0 b2
+ * @version 1.1.0 b3
  * @link https://github.com/benzBrake/ShortLinks
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
@@ -45,10 +45,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         Helper::addPanel(2, 'ShortLinks/panel.php', '短链管理', '短链接管理', 'administrator');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('ShortLinks_Plugin', 'replace');
-        Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin', 'replace');
-        Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin', 'replace');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('ShortLinks_Plugin', 'forceConvert');
-        Typecho_Plugin::factory('Widget_Archive')->singleHandle = array('ShortLinks_Plugin', 'replace');
+        Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = array('ShortLinks_Plugin', 'replace');
+        Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin', 'authorUrlConvert');
+        Typecho_Plugin::factory('Widget_Archive')->singleHandle = array('ShortLinks_Plugin', 'fieldsConvert');
         return ('数据表 ' . $shortlinks . ' 创建成功，插件已经成功激活！');
     }
 
@@ -153,32 +153,12 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     {
         $text = empty($lastResult) ? $text : $lastResult;
         $pluginOption = self::options(); // 插件选项
-        $siteUrl = Helper::options()->siteUrl;
         $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
         if ($pluginOption->convert == 1) {
-            if (!is_string($text) && $text instanceof Widget_Archive) {
-                // 自定义字段处理
-                $fieldsList = self::textareaToArr($pluginOption->convertCustomField);
-                if ($fieldsList) {
-                    foreach ($fieldsList as $field) {
-                        if (isset($text->fields[$field])) {
-                            @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text->fields[$field], $matches);
-                            if ($matches) {
-                                foreach ($matches[2] as $link) {
-                                    $text->fields[$field] = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"", $text->fields[$field]);
-                                }
-                            }
-                            if ($pluginOption->forceSwitch == 1) {
-                                // 强力模式
-                                $text->fields[$field] = self::autoLink($text->fields[$field]);
-                            }
-                        }
-                    }
-                }
-            }
             if (($widget instanceof Widget_Archive) || ($widget instanceof Widget_Abstract_Comments)) {
                 $fields = unserialize($widget->fields);
                 if (is_array($fields) && array_key_exists("noshort", $fields)) {
+                    // 部分文章不转换
                     return $text;
                 }
 
@@ -190,18 +170,69 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                     }
                 }
             }
-            if ($pluginOption->convertCommentLink == 1 && $widget instanceof Widget_Abstract_Comments) {
-                // 评论者链接处理
-                $url = $text['url'];
-                if (strpos($url, '://') !== false && strpos($url, rtrim($siteUrl, '/')) === false) {
-                    $text['url'] = self::convertLink($url, false);
-                    if ($pluginOption->authorPermalinkTarget) {
-                        $text['url'] = $text['url'] . '" target="_blank';
+        }
+        return $text;
+    }
+
+    /**
+     * 自定义字段处理
+     *
+     * @param Widget_Archive $widget
+     * @param Typecho_Db_Query $select
+     * @param mixed $lastResult
+     * @return void
+     */
+    public static function fieldsConvert($widget, $select, $lastResult)
+    {
+        $widget = empty($lastResult) ? $widget : $lastResult;
+        $pluginOption = self::options(); // 插件选项
+        $fieldsList = self::textareaToArr($pluginOption->convertCustomField);
+        if ($pluginOption->convert == 1) { // 总开关
+            if ($fieldsList) {
+                foreach ($fieldsList as $field) {
+                    if (isset($text->fields[$field])) {
+                        // 非强力模式转换 a 标签
+                        @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $widget->fields[$field], $matches);
+                        if ($matches) {
+                            
+                            foreach ($matches[2] as $link) {
+                                $widget->fields[$field] = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"", $widget->fields[$field]);
+                            }
+                        }
+                        // 强力模式匹配所有链接
+                        if ($pluginOption->forceSwitch == 1) {
+                            $widget->fields[$field] = self::autoLink($widget->fields[$field]);
+                        }
                     }
                 }
             }
         }
-        return $text;
+    }
+    /**
+     * 用户链接转换
+     *
+     * @param Array $value
+     * @param Widget_Abstract_Comments $widget
+     * @param mixed $lastResult
+     * @return void
+     */
+    public static function authorUrlConvert($value, $widget, $lastResult)
+    {
+        $value = empty($lastResult) ? $value : $lastResult;
+        $pluginOption = self::options(); // 插件选项
+        if ($pluginOption->convert == 1) { // 总开关
+            if ($pluginOption->convertCommentLink == 1) {
+                // 评论者链接处理
+                $url = $value['url'];
+                if (strpos($url, '://') !== false && strpos($url, rtrim(Helper::options()->siteUrl, '/')) === false) {
+                    $value['url'] = self::convertLink($url, false);
+                    if ($pluginOption->authorPermalinkTarget) {
+                        $value['url'] = $value['url'] . '" target="_blank';
+                    }
+                }
+            }
+        }
+        return $value;
     }
 
     /**
@@ -246,7 +277,8 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     public static function forceConvert($value, $widget, $lastResult)
     {
         $value = empty($lastResult) ? $value : $lastResult;
-        if (self::options()->forceSwitch == 1) {
+        $pluginOption = self::options();
+        if ($pluginOption->convert == 1 && $pluginOption->forceSwitch == 1) {
             $value['text'] = self::autoLink($value['text']);
         }
         return $value;
@@ -264,7 +296,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
         $target = (self::options()->target) ? ' target="_blank" ' : ''; // 新窗口打开
         return preg_replace_callback($url, function ($matches) use ($target) {
-            return '<a href="' . self::convertLink($matches[0]) . '" title="' . $matches[0] . '"' . $target . '>' . $matches[0] . '</a>';
+            if (strpos($matches[0], '://') !== false && strpos($matches[0], rtrim(Helper::options()->siteUrl, '/')) !== false) {
+                return '<a href="' . self::convertLink($matches[0]) . '" title="' . $matches[0] . '"' . $target . '>' . $matches[0] . '</a>';
+            }
+            return $matches[0];
         }, $content);
     }
 
