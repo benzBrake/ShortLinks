@@ -162,7 +162,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                     return $text;
                 }
                 // 文章内容和评论内容处理
-                @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $text, $matches);
+                @preg_match_all('/<a(.*?)href="(?!#)(.*?)"(.*?)>/', $text, $matches);
                 if ($matches) {
                     foreach ($matches[2] as $link) {
                         $text = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"" . $target, $text);
@@ -191,7 +191,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                 foreach ($fieldsList as $field) {
                     if (isset($text->fields[$field])) {
                         // 非强力模式转换 a 标签
-                        @preg_match_all('/<a(.*?)href="(.*?)"(.*?)>/', $widget->fields[$field], $matches);
+                        @preg_match_all('/<a(.*?)href="(?!#)(.*?)"(.*?)>/', $widget->fields[$field], $matches);
                         if ($matches) {
 
                             foreach ($matches[2] as $link) {
