@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.1.0 b3
+ * @version 1.1.0
  * @link https://github.com/benzBrake/ShortLinks
  */
 class ShortLinks_Plugin implements Typecho_Plugin_Interface
