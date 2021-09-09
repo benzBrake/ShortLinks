@@ -190,7 +190,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                 }
             }
         }
-        return $text . 'options:' . $pluginOption->convert;
+        return $text;
     }
 
     /**
