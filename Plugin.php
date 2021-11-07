@@ -47,10 +47,11 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
 				  PRIMARY KEY (`id`)
 				) DEFAULT CHARSET=$charset AUTO_INCREMENT=1");
         }
-        $helper = self::helper();
-        $helper::addAction('shortlinks', 'ShortLinks_Action');
-        $helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
-        $helper::addPanel(2, 'ShortLinks/panel.php', '短链管理', '短链接管理', 'administrator');
+
+        Helper::addAction('shortlinks', 'ShortLinks_Action');
+        Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
+        Helper::addPanel(2, 'ShortLinks/panel.php', '短链管理', '短链接管理', 'administrator');
+
         if (class_exists('\Widget\Base\Contents')) {
             Typecho\Plugin::factory('\Widget\Base\Contents')->contentEx = array('ShortLinks_Plugin', 'replace');
             Typecho\Plugin::factory('\Widget\Base\Contents')->excerptEx = array('ShortLinks_Plugin', 'replace');
@@ -82,11 +83,11 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     public static function deactivate()
     {
         $config = self::options('ShortLinks');
-        $helper = self::helper();
         $db = self::db();
-        $helper::removeRoute('go');
-        $helper::removeAction('shortlinks');
-        $helper::removePanel(2, 'ShortLinks/panel.php');
+
+        Helper::removeRoute('go');
+        Helper::removeAction('shortlinks');
+        Helper::removePanel(2, 'ShortLinks/panel.php');
         if ($config->isDrop == 0) {
             $db->query("DROP TABLE `{$db->getPrefix()}shortlinks`", Typecho_Db::WRITE);
             return (_t('短链接插件已被禁用，其表（%s）已被删除！', $db->getPrefix() . 'shortlinks'));
@@ -426,20 +427,12 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     }
 
     /**
-     * 获取 Helper 类
-     * @return mixed
-     */
-    public static function helper() {
-        return Helper;
-    }
-
-
-    /**
      * 获取数据库对象
      * @return mixed
      * @throws \Typecho\Db\Exception
      */
-    public static function db() {
+    public static function db()
+    {
         if (class_exists('Typecho\Db')) {
             return Typecho\Db::get();
         } else {
