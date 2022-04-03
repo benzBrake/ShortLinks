@@ -8,19 +8,28 @@ include 'menu.php';
         <div class="container typecho-page-main">
             <div class="col-mb-12 typecho-list">
                 <div class="typecho-option-tabs">
-                    <ul class="typecho-option-tabs clearfix">
+                    <ul class="typecho-option-tabs clearfix d-flex mb-2">
                         <li class="current">
-                            <form action="<?php $options->index('/action/shortlinks?add'); ?>" method="post">
-                                &nbsp;&nbsp;&nbsp;&nbsp;KEY:<input name="key" id="key" type="text" value=""/>&nbsp;&nbsp;&nbsp;&nbsp;
-                                目标:<input name="target" id="target" type="text" value="http://"/>
-                                <input type="submit" class="btn-s primary" value="添加"/>
+                            <form class="d-flex" action="<?php $options->index('/action/shortlinks?add'); ?>"
+                                  method="post">
+                                <div class="input-group mr-2">
+                                    <label for="key"><?php _e("KEY"); ?></label>
+                                    <input name="key" id="key" type="text" value=""/>
+                                </div>
+                                <div class="input-group">
+                                    <label for="target"><?php _e("目标"); ?></label>
+                                    <input name="target" id="target" type="text" value="http://"/>
+                                </div>
+                                <input type="submit" class="btn btn-s primary" value="<?php _e("添加"); ?>"/>
                             </form>
                         </li>
-
-                        <li class="right current">
-                            <?php $ro = Typecho_Router::get('go'); ?>
-                            自定义链接：<input id="links" name="links" value="<?php echo $ro['url'] ?>" type="text">
-                            <button id="qlinks" type="button">修改</button>
+                        <li class="ml-auto current d-flex">
+                            <div class="input-group">
+                                <?php $ro = Typecho_Router::get('go'); ?>
+                                <label for="links"><?php _e("自定义链接"); ?></label>
+                                <input id="links" name="links" value="<?php echo $ro['url'] ?>" type="text">
+                            </div>
+                            <input type="button" id="qlinks" class="btn btn-s primary" value="<?php _e("修改"); ?>"/>
                         </li>
                     </ul>
                 </div>
@@ -52,12 +61,13 @@ include 'menu.php';
                                 </td>
                                 <td>
                                     <?php $rourl = str_replace('[key]', $link['key'], $ro['url']); ?>
-                                    <?php $options->index($rourl); ?>
+                                    <a href="<?php $options->index($rourl); ?>"
+                                       target="_blank"><?php $options->index($rourl); ?></a>
                                 </td>
                                 <td id="e-<?php _e($link['id']); ?>"><?php _e($link['target']); ?></td>
                                 <td><?php _e($link['count']); ?></td>
                                 <td>
-                                    <a href="#<?php _e($link['id']); ?>" class="operate-edit">修改</a>
+                                    <a href="#<?php _e($link['id']); ?>" class="operate-edit"><?php _e("修改"); ?></a>
                                     <a lang="<?php _e('你确认要删除该链接吗?'); ?>"
                                        href="<?php $options->index('/action/shortlinks?del=' . $link['id']); ?>"
                                        class="operate-delete"><?php _e('删除'); ?></a>
@@ -73,11 +83,11 @@ include 'menu.php';
                             <?php $total = $db->fetchObject($db->select(array('COUNT(id)' => 'num'))->from('table.shortlinks'))->num; ?>
                             <?php for ($i = 1; $i <= ceil($total / 15); $i++): ?>
                                 <li class='current'><a
-                                            href="<?php $options->adminUrl('extending.php?panel=ShortLinks%2Fpanel.php&page=' . $i); ?>"
-                                            style='cursor:pointer;' title='第 <?php _e($i); ?> 页'> <?php _e($i); ?> </a>
+                                        href="<?php $options->adminUrl('extending.php?panel=ShortLinks%2Fpanel.php&page=' . $i); ?>"
+                                        style='cursor:pointer;'
+                                        title='<?php _e("第 %s 页", $i); ?>'> <?php _e($i); ?> </a>
                                 </li>
                             <?php endfor; ?>
-
                         </ul>
                     </div>
                 </div>
@@ -90,6 +100,50 @@ include 'copyright.php';
 include 'common-js.php';
 include 'footer.php';
 ?>
+<style>
+    .d-flex {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .ml-auto {
+        margin-left: auto;
+    }
+
+    .mb-2 {
+        margin-bottom: 10px;
+    }
+
+    .mr-2 {
+        margin-right: 10px;
+    }
+
+    .input-group {
+        display: flex;
+        border: 1px solid #d9d9d6;
+        border-radius: .22em;
+    }
+
+    .input-group:last-child {
+        margin-right: 0;
+    }
+
+    .input-group label {
+        display: block;
+        height: 28px;
+        line-height: 28px;
+        padding: 0 5px;
+        background-color: #e9ecef;
+    }
+
+    .input-group input {
+        padding: 2px 5px;
+        border: 0px;
+        background-color: #f7f9fb;
+        color: #707680;
+    }
+
+</style>
 <script type="text/javascript">
     $(document).ready(function () {
         $('.operate-edit').click(function () {
