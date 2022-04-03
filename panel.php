@@ -214,9 +214,9 @@ include 'footer.php';
                         if (data === 'success') {
                             $('#e-' + id).html($('#t-' + id).val());
                             $("[href='#" + id + "']").show();
-                            notice('<?php _e("修改链接成功"); ?>', 'success');
+                            notice('<?php _e("链接修改成功！"); ?>', 'success');
                         } else {
-                            notice('<?php _e("请输入有效链接"); ?>', 'error');
+                            notice('<?php _e("请输入有效链接！"); ?>', 'error');
                         }
                     }
                 });
