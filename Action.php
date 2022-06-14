@@ -58,6 +58,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
     public function edit()
     {
         $target = $this->request->url;
+        $target = base64_decode($target); // base64解码url
         $id = $this->request->id;
         if (trim($target) == "" || $target == "http://") {
             $this->response->throwJson('error');
