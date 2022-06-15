@@ -208,7 +208,7 @@ include 'footer.php';
             $('#u-' + id).click(function () {
                 $.ajax({
                     url: '<?php $options->index('/action/shortlinks?edit'); ?>',
-                    data: 'id=' + id + '&url=' + $('#t-' + id).val(),
+                    data: 'id=' + id + '&url=' + window.btoa($('#t-' + id).val()),// base64编码url
                     dataType: "json",
                     success: function (data) {
                         if (data === 'success') {
