@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.2.0 b2
+ * @version 1.2.0 b3
  * @link https://github.com/benzBrake/ShortLinks
  */
 

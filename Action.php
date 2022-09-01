@@ -128,7 +128,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
             }
             if (!$allow_redirect) {
                 // referer 非法跳转到首页
-                $this->response->redirect($siteUrl, 301);
+                $this->response->redirect(Typecho_Widget::widget('Widget_Options')->siteUrl, 301);
                 exit();
             }
         } else {
