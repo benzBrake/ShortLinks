@@ -172,7 +172,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * @return array|string|string[] $content
      * @throws \Typecho\Plugin\Exception
      */
-    public static function replace($text, $widget, $lastResult)
+    public static function replace(string $text, $widget, $lastResult)
     {
         $text = empty($lastResult) ? $text : $lastResult;
         $pluginOption = self::options('ShortLinks'); // 插件选项
@@ -269,7 +269,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * @return mixed $string
      * @throws \Typecho\Plugin\Exception
      */
-    public static function convertLink($link, $check = true)
+    public static function convertLink($link, bool $check = true)
     {
         $pluginOption = self::options('ShortLinks');
         $linkBase = ltrim(rtrim(Typecho_Router::get('go')['url'], '/'), '/'); // 防止链接形式修改后不能用
@@ -301,7 +301,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * @return Array
      * @throws \Typecho\Plugin\Exception
      */
-    public static function forceConvert($value, $widget, $lastResult)
+    public static function forceConvert(array $value, $widget, $lastResult): array
     {
         $value = empty($lastResult) ? $value : $lastResult;
         $pluginOption = self::options('ShortLinks');
@@ -338,11 +338,11 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * 检查域名是否在数组中存在
      *
      * @access public
-     * @param $url $arr
-     * @param $class
+     * @param string $url
+     * @param array|null $arr
      * @return boolean
      */
-    public static function checkDomain($url, $arr)
+    public static function checkDomain(string $url, ?array $arr): bool
     {
         if ($arr === null) {
             return false;
@@ -364,13 +364,12 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * 一行一个文本框转数组
      *
      * @access public
-     * @param $textarea
-     * @param $class
-     * @return $arr
+     * @param string|null $textarea
+     * @return array
      */
-    public static function textareaToArr($textarea)
+    public static function textareaToArr(?string $textarea): ?array
     {
-        $str = str_replace(array("\r\n", "\r", "\n"), "|", $textarea);
+        $str = str_replace(array("\r\n", "\r", "\n"), "|", $textarea ?? "");
         if ($str == "") {
             return null;
         }
@@ -398,20 +397,20 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     /**
      * Base64 编码
      *
-     * @param string $str
+     * @param string|null $str
      * @return string
      * @date 2020-05-01
      */
-    public static function urlSafeB64Encode($str)
+    public static function urlSafeB64Encode(?string $str): string
     {
-        $data = base64_encode($str);
+        $data = base64_encode($str ?? "");
         return str_replace(array('+', '/', '='), array('-', '_', ''), $data);
     }
 
     /**
      * 获得配置信息
      *
-     * @return Typecho_Options
+     * @return Typecho\Config|Typecho_Config
      * @throws \Typecho\Plugin\Exception
      */
     public static function options($plugin = null)
