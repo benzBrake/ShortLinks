@@ -5,7 +5,7 @@
  *
  * @package ShortLinks
  * @author Ryan
- * @version 1.2.0 b3
+ * @version 1.2.0
  * @link https://github.com/benzBrake/ShortLinks
  */
 
@@ -178,10 +178,12 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $pluginOption = self::options('ShortLinks'); // 插件选项
         $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
         if ($pluginOption->convert == 1) {
-            $fields = unserialize($widget->fields);
-            if (is_array($fields) && array_key_exists("noshort", $fields)) {
-                // 部分文章不转换
-                return $text;
+            if ($widget->fields) {
+                $fields = unserialize($widget->fields);
+                if (is_array($fields) && array_key_exists("noshort", $fields)) {
+                    // 部分文章不转换
+                    return $text;
+                }
             }
             // 文章内容和评论内容处理
             @preg_match_all('/<a(.*?)href="(?!#)(.*?)"(.*?)>/', $text, $matches);
