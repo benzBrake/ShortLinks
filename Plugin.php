@@ -47,6 +47,13 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
 				  PRIMARY KEY (`id`)
 				) DEFAULT CHARSET=$charset AUTO_INCREMENT=1");
         }
+        if ("Pdo_Pgsql" === $adapter || "Pgsql" === $adapter) {
+            $db->query("CREATE TABLE IF NOT EXISTS " . $tableName . " (
+			id SERIAL PRIMARY KEY,
+			key TEXT NOT NULL,
+			target TEXT NOT NULL,
+			count INTEGER DEFAULT 0)");
+        }
 
         Helper::addAction('shortlinks', 'ShortLinks_Action');
         Helper::addRoute('go', '/go/[key]/', 'ShortLinks_Action', 'shortlink');
