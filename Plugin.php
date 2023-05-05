@@ -49,10 +49,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         }
         if ("Pdo_Pgsql" === $adapter || "Pgsql" === $adapter) {
             $db->query("CREATE TABLE IF NOT EXISTS " . $tableName . " (
-			id SERIAL PRIMARY KEY,
-			key TEXT NOT NULL,
-			target TEXT NOT NULL,
-			count INTEGER DEFAULT 0)");
+                id SERIAL PRIMARY KEY,
+                key TEXT NOT NULL,
+                target TEXT NOT NULL,
+                count INTEGER DEFAULT 0)");
         }
 
         Helper::addAction('shortlinks', 'ShortLinks_Action');
@@ -91,12 +91,24 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     {
         $config = self::options('ShortLinks');
         $db = self::db();
+        $adapter = $db->getAdapterName();
+        $dropTableSql = '';
 
         Helper::removeRoute('go');
         Helper::removeAction('shortlinks');
         Helper::removePanel(2, 'ShortLinks/panel.php');
+
         if ($config->isDrop == 0) {
-            $db->query("DROP TABLE `{$db->getPrefix()}shortlinks`", Typecho_Db::WRITE);
+            if ("Pdo_SQLite" === $adapter || "SQLite" === $adapter) {
+                $dropTableSql = "DROP TABLE '{$db->getPrefix()}shortlinks'";
+            }
+            if ("Pdo_Mysql" === $adapter || "Mysql" === $adapter) {
+                $dropTableSql = "DROP TABLE `{$db->getPrefix()}shortlinks`";
+            }
+            if ("Pdo_Pgsql" === $adapter || "Pgsql" === $adapter) {
+                $dropTableSql = "DROP TABLE \"{$db->getPrefix()}shortlinks\"";
+            }
+            $db->query($dropTableSql, Typecho_Db::WRITE);
             return (_t('短链接插件已被禁用，其表（%s）已被删除！', $db->getPrefix() . 'shortlinks'));
         } else {
             return (_t('短链接插件已被禁用，但是其表（%s）并没有被删除！', $db->getPrefix() . 'shortlinks'));
