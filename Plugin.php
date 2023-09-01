@@ -196,6 +196,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $text = empty($lastResult) ? $text : $lastResult;
         $pluginOption = self::options('ShortLinks'); // 插件选项
         $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
+        
         if ($pluginOption->convert == 1) {
             if ($widget->fields) {
                 $fields = unserialize($widget->fields);
@@ -204,11 +205,24 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
                     return $text;
                 }
             }
-            // 文章内容和评论内容处理
+            
+            // 文章内容和评论内容处理，默认只处理a标签
             @preg_match_all('/<a(.*?)href="(?!#)(.*?)"(.*?)>/', $text, $matches);
             if ($matches) {
                 foreach ($matches[2] as $link) {
-                    $text = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"" . $target, $text);
+                    if(self::isExternalLink($link) ) { 
+                        $text = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"" . $target, $text);
+                    }
+                    
+                }
+            }
+            
+            // 强力模式
+            if ($pluginOption->forceSwitch == 1) 
+            {
+                // Markdown格式
+                if(strpos($text,'class="md_content"') !== false){
+                    $text = self::convertExternalLinkToInternalLinkInMarkdown($text);
                 }
             }
         }
@@ -218,9 +232,9 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     /**
      * 自定义字段处理
      *
-     * @param Widget_Archive $widget
-     * @param Typecho_Db_Query $select
-     * @param mixed $lastResult
+     * @param  Widget_Archive   $widget
+     * @param  Typecho_Db_Query $select
+     * @param  mixed            $lastResult
      * @return void
      * @throws \Typecho\Plugin\Exception
      */
@@ -233,17 +247,19 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             if ($fieldsList) {
                 foreach ($fieldsList as $field) {
                     if (isset($text->fields[$field])) {
-                        // 非强力模式转换 a 标签
-                        @preg_match_all('/<a(.*?)href="(?!#)(.*?)"(.*?)>/', $widget->fields[$field], $matches);
-                        if ($matches) {
-                            foreach ($matches[2] as $link) {
-                                $widget->fields[$field] = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"", $widget->fields[$field]);
+                        if(self::isExternalLink($link)) {
+                            // 非强力模式转换 a 标签
+                            @preg_match_all('/<a(.*?)href="(?!#)(.*?)"(.*?)>/', $widget->fields[$field], $matches);
+                            if ($matches) {
+                                foreach ($matches[2] as $link) {
+                                    
+                                    $widget->fields[$field] = str_replace("href=\"$link\"", "href=\"" . self::convertLink($link) . "\"", $widget->fields[$field]);    
+                                }
                             }
-                        }
-
-                        // 强力模式匹配所有链接
-                        if ($pluginOption->forceSwitch == 1) {
-                            $widget->fields[$field] = self::autoLink($widget->fields[$field]);
+                            // 强力模式匹配所有链接
+                            if ($pluginOption->forceSwitch == 1) {
+                                $widget->fields[$field] = self::autoLink($widget->fields[$field]);
+                            }
                         }
                     }
                 }
@@ -304,7 +320,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             }
 
             // 图片不处理
-            if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i', $link)) {
+            if (self::isImageUrl($link)) {
                 return $link;
             }
         }
@@ -314,9 +330,9 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     /**
      * 强力转换
      *
-     * @param Array $value
-     * @param mixed $widget
-     * @param mixed $lastResult
+     * @param  Array $value
+     * @param  mixed $widget
+     * @param  mixed $lastResult
      * @return Array
      * @throws \Typecho\Plugin\Exception
      */
@@ -333,13 +349,12 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     /**
      * 文本链接转A标签
      *
-     * @param string $content
+     * @param  string $content
      * @return string
      * @throws \Typecho\Plugin\Exception
      */
     public static function autoLink($content)
     {
-
         $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
         $target = (self::options()->target) ? ' target="_blank" ' : ''; // 新窗口打开
         return preg_replace_callback($url, function ($matches) use ($target) {
@@ -351,6 +366,33 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             }
             return $matches[0];
         }, $content);
+
+        // // 如果当前浏览器地址栏中的url是在后台页面，则不进行转换操作
+        // if(self::isAdminPage()){
+        //     return $content;
+        // }
+
+        // $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
+        
+        // $pluginOption = self::options('ShortLinks'); // 插件选项
+        // $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
+
+        // @preg_match_all($url, $content, $matches);
+        // if ($matches) {
+        //     foreach ($matches[0] as $link) {
+        //         if (self::isImageUrl($link)) {
+        //             continue;
+        //         }
+        //         if (strpos($link, '://') !== false ) {
+        //             if(self::isExternalLink($link)) {
+        //                 $aLink = '<a href="' . self::convertLink($link) . '" title="' . $link . '"' . $target . '>' . $link . '</a>';
+        //                 $content = str_replace($link, $aLink, $content);
+        //             }
+        //         }
+        //     }
+        // }
+        // // echo json_encode($matches)."\n";
+        // return $content;
     }
 
     /**
@@ -459,4 +501,152 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             return Typecho_Db::get();
         }
     }
+    
+    /**
+     * 检查url是否外链
+     *
+     * @access private
+     * @param  string $url
+     * @return boolean
+     */
+    private static function isExternalLink(string $url)
+    {
+        $parsedUrl = parse_url($url);
+    
+        // 检查url是否包含scheme（协议），例如http://或https://
+        if(isset($parsedUrl['scheme']) && ($parsedUrl['scheme'] == 'http' || $parsedUrl['scheme'] == 'https')) {
+            // 获取当前页面的Host( 192.168.174.130:33310 )
+            $currentDomain = $_SERVER['HTTP_HOST'];
+    
+            // 获取链接的域名( 192.168.174.130 )
+            $linkDomain = $parsedUrl['host'];
+    
+            // 检查链接的域名是否与当前页面的域名相同
+            if(strpos($currentDomain, $linkDomain) === false) {
+                return true; // 是外链
+            }
+        }
+    
+        return false; // 不是外链
+    }
+
+    /**
+     * 检查url是否图片
+     *
+     * @access private
+     * @param  string $url
+     * @return boolean
+     */
+    private static function isImageUrl(string $url)
+    {
+        // 有的图片链接会带后缀，例如oss类图片，后面再改
+        $imageReg = '/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i';
+        if (preg_match($imageReg, $url)) {
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 是否后台页面
+     * 
+     * @access private
+     * @return boolean
+     */
+    private static function isAdminPage()
+    {
+        if(strpos($_SERVER['REQUEST_URI'],__TYPECHO_ADMIN_DIR__)!==false) {
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 转换markdown中的外链 
+     * 
+     * @access private
+     * @param string $text
+     * @return string
+     */
+    private static function convertExternalLinkToInternalLinkInMarkdown(string $text)
+    {
+        // 纯url转换，不将url转换为a标签，这种方式最保险（会失去a标签的特性，本身markdown语法规则就不提供新窗口打开特性）
+        // []()
+        $urlReg = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
+        $pluginOption = self::options('ShortLinks'); // 插件选项
+
+        // 取出所有 "```" 和 "```"之间的内容（即代码块），用于在下面替换前判断url是否在"代码块"之中，如果在"代码块"之中，则不处理
+        $codeBlocks = self::getCodeBlockContent($text);
+
+        @preg_match_all($urlReg, $text, $matches);
+        if ($matches) {
+            foreach ($matches[0] as $url) {
+                if (self::isImageUrl($url)) {
+                    continue;
+                }
+                
+                // 判断最后一个字符是否是")"，如果是则删除；
+                // 因为markdown语法规则中有"[]()"格式的链接，上述正则规则会把")"给匹配进去，所以得删除")"
+                if ($url[strlen($url) - 1] === ')') {
+                    $url = substr($url, 0, -1);
+                }
+                
+                if (strpos($url, '://') !== false) {
+                    // 判断url是否在"代码块"中
+                    if(self::isUrlInCodeBlock($codeBlocks,$url)){
+                        continue;
+                    }
+                                    
+                    if(self::isExternalLink($url)) {
+                        $url_new = self::convertLink($url);
+                        $text = str_replace($url, $url_new, $text);
+                    }
+                }
+            }
+        }
+        return $text;
+    }
+
+    /**
+     * 取出"代码块"中的内容
+     * 
+     * @access private
+     * @param string $content
+     * @return array[string] "代码块"数组
+     */
+    private static function getCodeBlockContent(string $content)
+    {
+        $results = array();
+        $regex = '/```.*[^.](?P<matchCode>(.|[^.])*?)```/';
+        
+        @preg_match_all($regex, $content, $matches);
+        if($matches){
+            foreach ($matches['matchCode'] as $match) {
+                $results[] = $match;
+            }
+        }
+        return $results;
+    }
+    
+    /**
+     * 判断url是否在"代码块"中
+     * 
+     * @access private
+     * @param array[string] $codeBlocks
+     * @param string $url
+     * @return boolean
+     */
+    private static function isUrlInCodeBlock(array $codeBlocks,string $url)
+    {
+        foreach ($codeBlocks as $codeBlock) {
+            if (strpos($codeBlock, $url) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
 }
