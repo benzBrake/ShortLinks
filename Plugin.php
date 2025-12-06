@@ -177,9 +177,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      * @param Typecho_Widget_Helper_Form $form
      * @return void
      */
-    public static function personalConfig(Typecho_Widget_Helper_Form $form)
-    {
-    }
+    public static function personalConfig(Typecho_Widget_Helper_Form $form) {}
 
     /**
      * 外链转内链
@@ -220,13 +218,11 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
      *
      * @param Widget_Archive $widget
      * @param Typecho_Db_Query $select
-     * @param mixed $lastResult
      * @return void
      * @throws \Typecho\Plugin\Exception
      */
-    public static function fieldsConvert($widget, $select, $lastResult)
+    public static function fieldsConvert($widget, $select)
     {
-        $widget = empty($lastResult) ? $widget : $lastResult;
         $pluginOption = self::options('ShortLinks'); // 插件选项
         $fieldsList = self::textareaToArr($pluginOption->convertCustomField);
         if ($pluginOption->convert == 1) { // 总开关
