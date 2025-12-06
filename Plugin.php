@@ -300,7 +300,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             }
 
             // 图片不处理
-            if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i', $link)) {
+            if (preg_match('/\.(jpg|jpeg|png|ico|bmp|gif|tiff|webp|svg|avif|heic|heif)/i', $link)) {
                 return $link;
             }
         }
@@ -339,7 +339,7 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $url = '~(?:(https?)://([^\s<]+)|(www\.[^\s<]+?\.[^\s<]+))(?<![\.,:])~i';
         $target = (self::options()->target) ? ' target="_blank" ' : ''; // 新窗口打开
         return preg_replace_callback($url, function ($matches) use ($target) {
-            if (preg_match('/\.(jpg|jepg|png|ico|bmp|gif|tiff)/i', $matches[0])) {
+            if (preg_match('/\.(jpg|jpeg|png|ico|bmp|gif|tiff|webp|svg|avif|heic|heif)/i', $matches[0])) {
                 return $matches[0];
             }
             if (strpos($matches[0], '://') !== false && strpos($matches[0], rtrim(self::options()->siteUrl, '/')) !== false) {
