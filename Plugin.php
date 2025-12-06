@@ -66,6 +66,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             Typecho\Plugin::factory('\Widget\Base\Comments')->contentEx = array('ShortLinks_Plugin', 'replace');
             Typecho\Plugin::factory('\Widget\Base\Comments')->filter = array('ShortLinks_Plugin', 'authorUrlConvert');
             Typecho\Plugin::factory('\Widget\Archive')->singleHandle = array('ShortLinks_Plugin', 'fieldsConvert');
+            Typecho\Plugin::factory('admin/write-post.php')->option = array('ShortLinks_Plugin', 'addOption');
+            Typecho\Plugin::factory('admin/write-page.php')->option = array('ShortLinks_Plugin', 'addOption');
+            Typecho_Plugin::factory('\Widget\Contents\Post\Edit')->finishPublish = array(__CLASS__, "applyField");
+            Typecho_Plugin::factory('\Widget\Contents\Page\Edit')->finishPublish = array(__CLASS__, "applyField");
         } else {
             Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('ShortLinks_Plugin', 'replace');
             Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('ShortLinks_Plugin', 'replace');
@@ -73,6 +77,10 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = array('ShortLinks_Plugin', 'replace');
             Typecho_Plugin::factory('Widget_Abstract_Comments')->filter = array('ShortLinks_Plugin', 'authorUrlConvert');
             Typecho_Plugin::factory('Widget_Archive')->singleHandle = array('ShortLinks_Plugin', 'fieldsConvert');
+            Typecho_Plugin::factory('admin/write-post.php')->option = array('ShortLinks_Plugin', 'addOption');
+            Typecho_Plugin::factory('admin/write-page.php')->option = array('ShortLinks_Plugin', 'addOption');
+            Typecho_Plugin::factory('Widget_Contents_Post_Edit')->finishPublish = array(__CLASS__, "applyField");
+            Typecho_Plugin::factory('Widget_Contents_Page_Edit')->finishPublish = array(__CLASS__, "applyField");
         }
 
         return ('数据表 ' . $tableName . ' 创建成功，插件已经成功激活！');
@@ -419,6 +427,72 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
     {
         $data = base64_encode($str ?? "");
         return str_replace(array('+', '/', '='), array('-', '_', ''), $data);
+    }
+
+    public static function addOption($post)
+    {
+        $db = self::db();
+        $row = $db->fetchRow($db->select()->from('table.fields')->where('name = ?', 'noshort'));
+        $disableConvert = isset($row);
+        ?>
+        <p>
+            <input id="noshort" name="noshort" type="checkbox" value="1" <?php if ($disableConvert) echo ' checked="checked"'; ?>>
+            <label for="noshort"><?php _e("禁止转换链接为内链"); ?></label>
+        </p>
+        <?php
+    }
+
+    public static function applyField($content, $post)
+    {
+        $field = $post->request->get('noshort', false);
+        if ($field) {
+            self::setField('noshort', 'str', '', $post->cid);
+        } else {
+            $db = self::db();
+            $db->query($db->delete('table.fields')->where('name = ? and cid = ?', 'noshort', $post->cid));
+        }
+    }
+
+    /**
+     * 设置单个字段
+     *
+     * @param string $name
+     * @param string $type
+     * @param string $value
+     * @param integer $cid
+     * @access private
+     * @return integer
+     */
+    private static function setField($name, $type, $value, $cid)
+    {
+        $db = Typecho_Db::get();
+        if (empty($name) || !in_array($type, array('str', 'int', 'float'))) {
+            return false;
+        }
+
+        $exist = $db->fetchRow($db->select('cid')->from('table.fields')
+            ->where('cid = ? AND name = ?', $cid, $name));
+
+        if (empty($exist)) {
+            return $db->query($db->insert('table.fields')
+                ->rows(array(
+                    'cid' => $cid,
+                    'name' => $name,
+                    'type' => $type,
+                    'str_value' => 'str' == $type ? $value : null,
+                    'int_value' => 'int' == $type ? intval($value) : 0,
+                    'float_value' => 'float' == $type ? floatval($value) : 0,
+                )));
+        } else {
+            return $db->query($db->update('table.fields')
+                ->rows(array(
+                    'type' => $type,
+                    'str_value' => 'str' == $type ? $value : null,
+                    'int_value' => 'int' == $type ? intval($value) : 0,
+                    'float_value' => 'float' == $type ? floatval($value) : 0,
+                ))
+                ->where('cid = ? AND name = ?', $cid, $name));
+        }
     }
 
     /**
