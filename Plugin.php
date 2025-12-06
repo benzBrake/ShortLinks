@@ -196,9 +196,8 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
         $target = ($pluginOption->target) ? ' target="_blank" ' : ''; // 新窗口打开
         if ($pluginOption->convert == 1) {
             if ($widget->fields) {
-                $fields = unserialize($widget->fields);
-                if (is_array($fields) && array_key_exists("noshort", $fields)) {
-                    // 部分文章不转换
+                $noshort = $widget->fields->noshort;
+                if (isset($noshort)) {
                     return $text;
                 }
             }
