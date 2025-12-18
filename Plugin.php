@@ -439,6 +439,14 @@ class ShortLinks_Plugin implements Typecho_Plugin_Interface
             <input id="noshort" name="noshort" type="checkbox" value="1" <?php if ($disableConvert) echo ' checked="checked"'; ?>>
             <label for="noshort"><?php _e("禁止转换链接为内链"); ?></label>
         </p>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                let field = document.querySelector('input[name="fieldNames[]"][value="noshort"]');
+                if (field) {
+                    field.closest('tr').style.display = 'none';
+                }
+            });
+        </script>
         <?php
     }
 
