@@ -10,7 +10,7 @@ include 'menu.php';
                 <div class="typecho-option-tabs">
                     <ul class="typecho-option-tabs clearfix d-flex mb-2">
                         <li class="current">
-                            <form class="d-flex" action="<?php $options->index('/action/shortlinks?add'); ?>"
+                            <form class="d-flex" action="<?php $security->index('/action/shortlinks?add'); ?>"
                                   method="post">
                                 <div class="input-group mr-2">
                                     <label for="key"><?php _e("KEY"); ?></label>
@@ -69,7 +69,7 @@ include 'menu.php';
                                 <td>
                                     <a href="#<?php _e($link['id']); ?>" class="operate-edit"><?php _e("修改"); ?></a>
                                     <a lang="<?php _e('你确认要删除该链接吗?'); ?>"
-                                       href="<?php $options->index('/action/shortlinks?del=' . $link['id']); ?>"
+                                       href="<?php $security->index('/action/shortlinks?del=' . $link['id']); ?>"
                                        class="operate-delete"><?php _e('删除'); ?></a>
                                 </td>
                             </tr>
@@ -207,7 +207,7 @@ include 'footer.php';
             //确认
             $('#u-' + id).click(function () {
                 $.ajax({
-                    url: '<?php $options->index('/action/shortlinks?edit'); ?>',
+                    url: '<?php $security->index('/action/shortlinks?edit'); ?>',
                     data: 'id=' + id + '&url=' + window.btoa($('#t-' + id).val()),// base64编码url
                     dataType: "json",
                     success: function (data) {
@@ -230,7 +230,7 @@ include 'footer.php';
 
         $('#qlinks').click(function () {
             $.ajax({
-                url: '<?php $options->index('/action/shortlinks?resetLink'); ?>',
+                url: '<?php $security->index('/action/shortlinks?resetLink'); ?>',
                 data: 'link=' + $('#links').val(),
                 dataType: 'json',
                 success: function (data) {

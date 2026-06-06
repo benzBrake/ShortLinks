@@ -27,9 +27,9 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
      */
     public function add()
     {
-        $key = $this->request->key;
-        $key = $key ? $key : Typecho_Common::randString(8);
-        $target = $this->request->target;
+        $key = trim((string)$this->request->get('key'));
+        $key = $key !== '' ? $key : Typecho_Common::randString(8);
+        $target = trim((string)$this->request->get('target'));
         if ($target === "" || $target === "http://") {
             $this->notice->set(_t('请输入目标链接。'), 'error');
         } //判断key是否被占用
@@ -38,7 +38,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         } else {
             $links = array(
                 'key' => $key,
-                'target' => $this->request->target,
+                'target' => $target,
                 'count' => 0,
             );
             $insertId = $this->db->query($this->db->insert('table.shortlinks')->rows($links));
@@ -57,9 +57,9 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function edit()
     {
-        $target = $this->request->url;
+        $target = $this->request->get('url');
         $target = base64_decode($target); // base64解码url
-        $id = $this->request->id;
+        $id = $this->request->get('id');
         if (trim($target) == "" || $target == "http://") {
             $this->response->throwJson('error');
         } else {
@@ -172,7 +172,7 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
      */
     public function resetLink()
     {
-        $link = $this->request->link;
+        $link = $this->request->get('link');
         Helper::removeRoute('go');
         Helper::addRoute('go', $link, 'ShortLinks_Action', 'shortlink');
         $this->response->throwJson('success');
@@ -180,11 +180,16 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function action()
     {
+        $isAdd = isset($_GET['add']);
+        $isEdit = isset($_GET['edit']);
+        $isDel = isset($_GET['del']);
+        $isResetLink = isset($_GET['resetLink']);
         $this->widget('Widget_User')->pass('administrator');
-        $this->on($this->request->is('add'))->add();
-        $this->on($this->request->is('edit'))->edit();
-        $this->on($this->request->is('del'))->del($this->request->del);
-        $this->on($this->request->is('resetLink'))->resetLink();
+        $this->protectRequest();
+        $this->on($isAdd)->add();
+        $this->on($isEdit)->edit();
+        $this->on($isDel)->del($this->request->get('del'));
+        $this->on($isResetLink)->resetLink();
         $this->response->goBack();
     }
 
@@ -201,10 +206,10 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         /** 主题变量重载 */
         if (!empty($options['theme:' . $options['theme']])) {
-            $themeOptions = null;
+            $themeOptions = @unserialize($options['theme:' . $options['theme']]);
 
             /** 解析变量 */
-            if ($themeOptions = unserialize($options['theme:' . $options['theme']])) {
+            if (is_array($themeOptions)) {
                 /** 覆盖变量 */
                 $options = array_merge($options, $themeOptions);
             }
@@ -225,6 +230,32 @@ class ShortLinks_Action extends Typecho_Widget implements Widget_Interface_Do
 
         return Typecho_Config::factory($options);
     }
+
+    /**
+     * 兼容不同 Typecho 版本的请求保护
+     */
+    private function protectRequest()
+    {
+        if (class_exists('\Utils\Helper') && method_exists('\Utils\Helper', 'security')) {
+            \Utils\Helper::security()->protect();
+            return;
+        }
+
+        if (class_exists('Helper') && method_exists('Helper', 'security')) {
+            Helper::security()->protect();
+            return;
+        }
+
+        if (class_exists('\Widget\Security')) {
+            \Widget\Security::alloc()->protect();
+            return;
+        }
+
+        if (class_exists('Widget_Security')) {
+            Typecho_Widget::widget('Widget_Security')->protect();
+        }
+    }
+
     /**
      * 替换回调
      *
