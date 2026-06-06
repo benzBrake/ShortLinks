@@ -8,7 +8,7 @@ include 'menu.php';
         <div class="container typecho-page-main">
             <div class="col-mb-12 typecho-list">
                 <div class="typecho-option-tabs">
-                    <ul class="typecho-option-tabs clearfix d-flex mb-2">
+                    <ul class="typecho-option-tabs clearfix d-flex mb-2 w-100">
                         <li class="current">
                             <form class="d-flex" action="<?php $security->index('/action/shortlinks?add'); ?>"
                                   method="post">
