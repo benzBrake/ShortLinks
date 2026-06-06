@@ -1,8 +1,10 @@
 .idea
+.playwright-mcp/
 .DS_Store
 AGENTS.local.md
 composer.phar
 composer.lock
+*.log
 /templates/
 !/templates/default.html
 !/templates/template1.html
